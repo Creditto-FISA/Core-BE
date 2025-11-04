@@ -2,11 +2,9 @@ package org.creditto.core_banking.domain.account.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.creditto.core_banking.domain.transaction.entity.Transaction;
 import org.creditto.core_banking.global.common.BaseEntity;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Entity
 @Getter

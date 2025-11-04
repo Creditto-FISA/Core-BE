@@ -1,11 +1,11 @@
-package org.creditto.core_banking.domain.overseasRemittance.entity;
+package org.creditto.core_banking.domain.overseasremittance.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
-import org.creditto.core_banking.domain.regularRemittance.entity.RegularRemittance;
-import org.creditto.core_banking.domain.remittanceFee.entity.RemittanceFee;
+import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
+import org.creditto.core_banking.domain.remittancefee.entity.RemittanceFee;
 import org.creditto.core_banking.global.common.BaseEntity;
 
 import java.math.BigDecimal;

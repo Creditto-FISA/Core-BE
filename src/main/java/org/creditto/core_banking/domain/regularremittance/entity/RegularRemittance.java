@@ -1,11 +1,13 @@
-package org.creditto.core_banking.domain.regularRemittance.entity;
+package org.creditto.core_banking.domain.regularremittance.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
-import org.creditto.core_banking.global.common.BaseEntity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 

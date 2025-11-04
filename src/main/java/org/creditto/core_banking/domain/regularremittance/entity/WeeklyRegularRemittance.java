@@ -1,9 +1,13 @@
-package org.creditto.core_banking.domain.regularRemittance.entity;
+package org.creditto.core_banking.domain.regularremittance.entity;
 
-import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import lombok.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
@@ -13,28 +17,31 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @SuperBuilder
-@DiscriminatorValue("MONTHLY")
+@DiscriminatorValue("WEEKLY")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class MonthlyRegularRemittance extends RegularRemittance{
-    private Integer scheduledDate; // MONTHLY일 때만 사용 (1~31)
+public class WeeklyRegularRemittance extends RegularRemittance{
 
-    public static MonthlyRegularRemittance of(
+    @Enumerated(EnumType.STRING)
+    private ScheduledDay scheduledDay;
+
+    public static WeeklyRegularRemittance of(
             Account account,
             Recipient recipient,
             String sendCurrency,
             String receivedCurrency,
             BigDecimal sendAmount,
-            Integer scheduledDate
+            ScheduledDay scheduledDay
     ) {
-        return MonthlyRegularRemittance.builder()
+        return WeeklyRegularRemittance.builder()
                 .account(account)
                 .recipient(recipient)
                 .sendCurrency(sendCurrency)
                 .receivedCurrency(receivedCurrency)
                 .sendAmount(sendAmount)
                 .regRemStatus(RegRemStatus.ACTIVE)
-                .scheduledDate(scheduledDate)
+                .scheduledDay(scheduledDay)
                 .build();
     }
+
 }

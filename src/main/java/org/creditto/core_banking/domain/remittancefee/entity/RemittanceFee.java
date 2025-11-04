@@ -1,4 +1,4 @@
-package org.creditto.core_banking.domain.remittanceFee.entity;
+package org.creditto.core_banking.domain.remittancefee.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
