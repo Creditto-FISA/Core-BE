@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        docker { image 'gradle:8.4.0-jdk17' }
-    }
+    agent any
 
     stages {
         stage('Build and Test') {
