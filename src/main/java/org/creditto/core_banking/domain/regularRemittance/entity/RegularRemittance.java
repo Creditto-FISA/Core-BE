@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @SuperBuilder
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "regrem_type")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class RegularRemittance {

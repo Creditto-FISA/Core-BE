@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.regularRemittance.entity;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @SuperBuilder
+@DiscriminatorValue("WEEKLY")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class WeeklyRegularRemittance extends RegularRemittance{

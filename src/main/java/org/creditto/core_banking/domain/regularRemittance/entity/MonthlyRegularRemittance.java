@@ -1,5 +1,7 @@
 package org.creditto.core_banking.domain.regularRemittance.entity;
 
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -11,6 +13,7 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @SuperBuilder
+@DiscriminatorValue("MONTHLY")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class MonthlyRegularRemittance extends RegularRemittance{
