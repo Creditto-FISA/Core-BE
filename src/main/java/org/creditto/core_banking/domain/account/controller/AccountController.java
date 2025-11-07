@@ -29,7 +29,7 @@ public class AccountController {
         return ApiResponseUtil.success(SuccessCode.OK, accountService.findByAccountNo(accountNo));
     }
 
-    @GetMapping("/{clientId}")
+    @GetMapping("client/{clientId}")
     public ResponseEntity<BaseResponse<?>> findByClientId(@PathVariable String clientId) {
         return ApiResponseUtil.success(SuccessCode.OK, accountService.findByClientId(clientId));
     }

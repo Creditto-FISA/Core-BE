@@ -42,4 +42,8 @@ public class Account extends BaseEntity {
                 .clientId(clientId)
                 .build();
     }
+
+    public void updateBalance(BigDecimal amount) {
+        this.balance = balance.add(amount);
+    }
 }

@@ -1,6 +1,6 @@
 package org.creditto.core_banking.domain.account;
 
-import org.creditto.core_banking.domain.account.dto.AccountResponseDto;
+import org.creditto.core_banking.domain.account.dto.AccountRes;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.entity.AccountState;
 import org.creditto.core_banking.domain.account.entity.AccountType;
@@ -101,7 +101,7 @@ public class AccountServiceImplTest {
                 .willReturn(List.of(account1, account2));
         
         // when
-        List<AccountResponseDto> result = accountService.findByClientId(clientId);
+        List<AccountRes> result = accountService.findByClientId(clientId);
 
         // then
         assertThat(result.size()).isEqualTo(2);

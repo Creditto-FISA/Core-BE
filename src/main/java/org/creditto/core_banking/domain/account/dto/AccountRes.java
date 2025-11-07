@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountResponseDto {
+public class AccountRes {
 
     private String accountNo;
     private String accountName;
@@ -23,8 +23,8 @@ public class AccountResponseDto {
     private AccountState accountState;
     private String clientId;
 
-    public static AccountResponseDto from(Account account) {
-        return AccountResponseDto.builder()
+    public static AccountRes from(Account account) {
+        return AccountRes.builder()
                 .accountNo(account.getAccountNo())
                 .accountName(account.getAccountName())
                 .balance(account.getBalance())
