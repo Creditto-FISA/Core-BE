@@ -59,6 +59,9 @@ public class ExchangeServiceImpl implements ExchangeService {
             appliedRate = buyRate;
 
             BigDecimal foreignCurrencyAmount = request.getTargetAmount().divide(buyRate, 2, java.math.RoundingMode.HALF_UP);
+
+            // 외부 가상 계좌로부터의 외화 출금은 외부 시스템에서 처리된 것으로 간주
+            // 여기서는 해당 원화 금액만큼만 사용자 계좌에 입금
             account.updateBalance(request.getTargetAmount()); // targetAmount(원화)만큼 계좌에 입금
 
             saveExchangeHistory(account, request.getFromCurrency(), request.getToCurrency(), foreignCurrencyAmount, request.getTargetAmount(), buyRate);

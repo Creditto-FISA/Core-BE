@@ -18,7 +18,7 @@ public class ExchangeRateProvider {
     private final ExchangeRateFeign exchangeRateFeign;
 
     @Value("${exchange.auth-key}")
-    private String authKey;
+    private String authkey;
 
 
     /**
@@ -32,13 +32,13 @@ public class ExchangeRateProvider {
         List<ExchangeRateRes> rates;
 
         try {
-            rates = exchangeRateFeign.getExchangeRate(authKey, today, "AP01");
+            rates = exchangeRateFeign.getExchangeRate(authkey, today, "AP01");
 
             // 비영업일이거나 null 응답을 받으면 전 영업일로 재조회
             if (rates == null || rates.isEmpty() || rates.get(0).getCurrencyUnit() == null) {
                 LocalDate exDate = getPreviousBusinessDate(LocalDate.now());
                 String newDate = exDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-                rates = exchangeRateFeign.getExchangeRate(authKey, newDate, "AP01");
+                rates = exchangeRateFeign.getExchangeRate(authkey, newDate, "AP01");
             }
 
             // 그래도 null일 경우 강제 예외
@@ -49,7 +49,7 @@ public class ExchangeRateProvider {
             return rates;
 
         } catch (Exception e) {
-            throw new RuntimeException(ErrorBaseCode.INTERNAL_SERVER_ERROR.getMessage());
+            throw new RuntimeException(ErrorBaseCode.INTERNAL_SERVER_ERROR.getMessage(), e);
         }
 
     }

@@ -4,7 +4,7 @@ import org.creditto.core_banking.config.FeignConfig;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRateRes;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -17,8 +17,8 @@ public interface ExchangeRateFeign {
 
     @GetMapping("site/program/financial/exchangeJSON")
     List<ExchangeRateRes> getExchangeRate(
-            @PathVariable("authKey") String authKey,
-            @PathVariable("searchdate") String searchdate,
-            @PathVariable("data") String data
+            @RequestParam("authkey") String authKey,
+            @RequestParam("searchdate") String searchdate,
+            @RequestParam("data") String data
     );
 }
