@@ -6,7 +6,7 @@ import org.creditto.core_banking.domain.exchange.dto.ExchangeRateRes;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
-import org.creditto.core_banking.domain.exchange.service.ExchangeServiceImpl;
+import org.creditto.core_banking.domain.exchange.service.ExchangeService;
 import org.creditto.core_banking.global.feign.ExchangeRateProvider;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
-public class ExchangeServiceImplTest {
+public class ExchangeServiceTest {
 
     @Mock
     private ExchangeRateProvider exchangeRateProvider;
@@ -38,7 +38,7 @@ public class ExchangeServiceImplTest {
     private ExchangeRepository exchangeRepository;
 
     @InjectMocks
-    private ExchangeServiceImpl exchangeService;
+    private ExchangeService exchangeService;
 
     private Account testAccount;
     private ExchangeRateRes usdRate;
@@ -78,15 +78,16 @@ public class ExchangeServiceImplTest {
     @DisplayName("환전 성공: 원화 -> 외화 (100 USD 요청)")
     void exchange_KRWTo_Success() {
         // Given
-        ExchangeReq request = ExchangeReq.builder()
-                .accountId(1L)
-                .fromCurrency("KRW")
-                .toCurrency("USD")
-                .targetAmount(new BigDecimal("100.00")) // 100 USD 요청
-                .build();
+        ExchangeReq request = new ExchangeReq(
+                1L,
+                "KRW",
+                "USD",
+                "US", // Added country field
+                new BigDecimal("100.00") // 100 USD 요청
+        );
 
         BigDecimal sellRate = new BigDecimal(usdRate.getSellRate()); // 1320.00
-        BigDecimal expectedKrwDebit = request.getTargetAmount().multiply(sellRate); // 100 * 1320 = 132,000 KRW
+        BigDecimal expectedKrwDebit = request.targetAmount().multiply(sellRate); // 100 * 1320 = 132,000 KRW
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(Arrays.asList(usdRate, jpyRate));
         given(accountRepository.findById(1L)).willReturn(Optional.of(testAccount));
@@ -95,7 +96,7 @@ public class ExchangeServiceImplTest {
         ExchangeRes response = exchangeService.exchange(request);
 
         // Then
-        assertThat(response.getExchangeAmount()).isEqualByComparingTo("100.00"); // 받은 외화 금액은 100 USD
+        assertThat(response.exchangeAmount()).isEqualByComparingTo("100.00"); // 받은 외화 금액은 100 USD
         BigDecimal expectedRemainingBalance = new BigDecimal("1000000.00").subtract(expectedKrwDebit); // 1,000,000 - 132,000 = 868,000 KRW
         assertThat(testAccount.getBalance()).isEqualByComparingTo(expectedRemainingBalance);
     }
@@ -104,12 +105,13 @@ public class ExchangeServiceImplTest {
     @DisplayName("환전 성공: 외화 -> 원화 (100000 KRW 요청)")
     void exchange_ToKRW_Success() {
         // Given
-        ExchangeReq request = ExchangeReq.builder()
-                .accountId(1L)
-                .fromCurrency("USD")
-                .toCurrency("KRW")
-                .targetAmount(new BigDecimal("100000.00")) // 100,000 KRW 요청
-                .build();
+        ExchangeReq request = new ExchangeReq(
+                1L,
+                "USD",
+                "KRW",
+                "KR", // Added country field
+                new BigDecimal("100000.00") // 100,000 KRW 요청
+        );
 
         BigDecimal buyRate = new BigDecimal(usdRate.getBuyRate()); // 1280.00
 
@@ -120,8 +122,8 @@ public class ExchangeServiceImplTest {
         ExchangeRes response = exchangeService.exchange(request);
 
         // Then
-        assertThat(response.getExchangeAmount()).isEqualByComparingTo("100000.00"); // 받은 원화 금액은 100,000 KRW
-        BigDecimal expectedNewBalance = new BigDecimal("1000000.00").add(request.getTargetAmount()); // 1,000,000 + 100,000 = 1,100,000 KRW
+        assertThat(response.exchangeAmount()).isEqualByComparingTo("100000.00"); // 받은 원화 금액은 100,000 KRW
+        BigDecimal expectedNewBalance = new BigDecimal("1000000.00").add(request.targetAmount()); // 1,000,000 + 100,000 = 1,100,000 KRW
         assertThat(testAccount.getBalance()).isEqualByComparingTo(expectedNewBalance);
     }
 
@@ -129,12 +131,13 @@ public class ExchangeServiceImplTest {
     @DisplayName("잔액 부족으로 인한 환전 실패: 원화 -> 외화")
     void exchange_Fail_InsufficientBalance() {
         // Given
-        ExchangeReq request = ExchangeReq.builder()
-                .accountId(1L)
-                .fromCurrency("KRW")
-                .toCurrency("USD")
-                .targetAmount(new BigDecimal("1000.00")) // 1000 USD 요청
-                .build();
+        ExchangeReq request = new ExchangeReq(
+                1L,
+                "KRW",
+                "USD",
+                "US", // Added country field
+                new BigDecimal("1000.00") // 1000 USD 요청
+        );
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(Arrays.asList(usdRate, jpyRate));
         given(accountRepository.findById(1L)).willReturn(Optional.of(testAccount));
@@ -152,12 +155,13 @@ public class ExchangeServiceImplTest {
     @DisplayName("지원하지 않는 통화로 환전 요청 시 실패")
     void exchange_Fail_UnsupportedCurrency() {
         // Given
-        ExchangeReq request = ExchangeReq.builder()
-                .accountId(1L)
-                .fromCurrency("KRW")
-                .toCurrency("EUR") // 지원하지 않는 통화라고 가정
-                .targetAmount(new BigDecimal("100.00"))
-                .build();
+        ExchangeReq request = new ExchangeReq(
+                1L,
+                "KRW",
+                "EUR", // 지원하지 않는 통화라고 가정
+                "DE", // Added country field
+                new BigDecimal("100.00")
+        );
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(Arrays.asList(usdRate, jpyRate));
         given(accountRepository.findById(1L)).willReturn(Optional.of(testAccount));
@@ -172,12 +176,13 @@ public class ExchangeServiceImplTest {
     @DisplayName("존재하지 않는 계좌로 환전 요청 시 실패")
     void exchange_Fail_AccountNotFound() {
         // Given
-        ExchangeReq request = ExchangeReq.builder()
-                .accountId(99L) // 존재하지 않는 계좌 ID
-                .fromCurrency("KRW")
-                .toCurrency("USD")
-                .targetAmount(new BigDecimal("100.00"))
-                .build();
+        ExchangeReq request = new ExchangeReq(
+                99L, // 존재하지 않는 계좌 ID
+                "KRW",
+                "USD",
+                "US", // Added country field
+                new BigDecimal("100.00")
+        );
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(Arrays.asList(usdRate, jpyRate));
         given(accountRepository.findById(99L)).willReturn(Optional.empty());

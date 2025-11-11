@@ -3,6 +3,7 @@ package org.creditto.core_banking.domain.exchange.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.creditto.core_banking.domain.account.entity.Account;
+import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
 import org.creditto.core_banking.global.common.BaseEntity;
 
 import java.math.BigDecimal;
@@ -22,9 +23,11 @@ public class Exchange extends BaseEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    private String fromCurrency;
+    private String fromCurrency; // TODO: 통화코드 Enum으로 변경 예정
 
-    private String toCurrency;
+    private String toCurrency; // TODO: 통화코드 Enum으로 변경 예정
+
+    private String country; // 수취 국가
 
     @Column(precision = 20, scale = 2)
     private BigDecimal fromAmount;
@@ -32,14 +35,16 @@ public class Exchange extends BaseEntity {
     @Column(precision = 20, scale = 2)
     private BigDecimal toAmount;
 
-    @Column(precision = 20, scale = 6) // 환율은 더 높은 정밀도가 필요할 수 있습니다.
-    private BigDecimal exchangeRate;
+    @Column(precision = 20, scale = 6)
+    private BigDecimal exchangeRate; // 제공 환율
 
-    public static Exchange of(Account account, String fromCurrency, String toCurrency, BigDecimal fromAmount, BigDecimal toAmount, BigDecimal exchangeRate) {
+
+
+    public static Exchange of(Account account, ExchangeReq req, BigDecimal fromAmount, BigDecimal toAmount, BigDecimal exchangeRate) {
         return Exchange.builder()
                 .account(account)
-                .fromCurrency(fromCurrency)
-                .toCurrency(toCurrency)
+                .fromCurrency(req.fromCurrency())
+                .toCurrency(req.toCurrency())
                 .fromAmount(fromAmount)
                 .toAmount(toAmount)
                 .exchangeRate(exchangeRate)

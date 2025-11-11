@@ -1,6 +1,6 @@
 package org.creditto.core_banking.global.feign;
 
-import org.creditto.core_banking.config.FeignConfig;
+import org.creditto.core_banking.global.config.FeignConfig;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRateRes;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

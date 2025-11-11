@@ -14,12 +14,6 @@ public class ExchangeRateRes {
     @JsonProperty("cur_unit")
     private String currencyUnit; // 통화 코드
 
-    @JsonProperty("ttb")
-    private String buyRate; // 살 때 환율
-
-    @JsonProperty("tts")
-    private String sellRate; // 팔 때 환율
-
     @JsonProperty("deal_bas_r")
     private String baseRate; // 매매 기준율
 
