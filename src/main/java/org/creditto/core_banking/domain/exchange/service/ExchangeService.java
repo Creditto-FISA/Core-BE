@@ -153,7 +153,8 @@ public class ExchangeService {
                 exchangeReq,
                 fromAmount,
                 toAmount,
-                rate
+                rate,
+                exchangeReq.country()
         );
         exchangeRepository.save(exchange);
     }

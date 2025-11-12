@@ -9,6 +9,7 @@ import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
 import org.creditto.core_banking.domain.exchange.service.ExchangeService;
 import org.creditto.core_banking.global.feign.ExchangeRateProvider;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -192,6 +192,6 @@ public class ExchangeServiceTest {
         assertThatThrownBy(() -> exchangeService.exchange(request))
                 .isInstanceOf(CustomBaseException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorBaseCode.ACCOUNT_NOT_FOUND);
+                .isEqualTo(ErrorBaseCode.NOT_FOUND_ACCOUNT);
     }
 }
