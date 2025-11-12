@@ -3,6 +3,8 @@ package org.creditto.core_banking.domain.account.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.creditto.core_banking.global.common.BaseEntity;
+import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 
 import java.math.BigDecimal;
 
@@ -52,7 +54,7 @@ public class Account extends BaseEntity {
     // 출금
     public void withdraw(BigDecimal amount) {
         if (this.balance.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("계좌 잔액이 부족합니다.");
+            throw new CustomBaseException(ErrorBaseCode.INSUFFICIENT_FUNDS);
         }
 
         this.balance = balance.subtract(amount);

@@ -10,7 +10,7 @@ import java.util.List;
 
 @FeignClient(
         name = "exchange-rate",
-        url = "https://www.koreaexim.go.kr",
+        url = "https://oapi.koreaexim.go.kr",
         configuration = FeignConfig.class
 )
 public interface ExchangeRateFeign {

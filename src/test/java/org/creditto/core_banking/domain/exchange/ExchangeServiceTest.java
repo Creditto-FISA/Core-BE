@@ -9,6 +9,7 @@ import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
 import org.creditto.core_banking.domain.exchange.service.ExchangeService;
 import org.creditto.core_banking.global.feign.ExchangeRateProvider;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -157,8 +157,9 @@ public class ExchangeServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.INSUFFICIENT_FUNDS);
     }
 
     @Test
@@ -168,11 +169,14 @@ public class ExchangeServiceTest {
         ExchangeReq request = new ExchangeReq(1L, "KRW", "EUR", "DE", new BigDecimal("100.00"));
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(List.of(usdRate, jpyRate));
+        given(accountRepository.findById(1L)).willReturn(Optional.of(testAccount));
+
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("해당 통화(EUR)의 환율 정보를 찾을 수 없습니다.");
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
     }
 
     @Test
@@ -186,7 +190,8 @@ public class ExchangeServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.NOT_FOUND_ACCOUNT);
     }
 }

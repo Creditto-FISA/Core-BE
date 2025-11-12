@@ -40,11 +40,12 @@ public class Exchange extends BaseEntity {
 
 
 
-    public static Exchange of(Account account, ExchangeReq req, BigDecimal fromAmount, BigDecimal toAmount, BigDecimal exchangeRate) {
+    public static Exchange of(Account account, ExchangeReq req, BigDecimal fromAmount, BigDecimal toAmount, BigDecimal exchangeRate, String country) {
         return Exchange.builder()
                 .account(account)
                 .fromCurrency(req.fromCurrency())
                 .toCurrency(req.toCurrency())
+                .country(country) // country 필드 추가
                 .fromAmount(fromAmount)
                 .toAmount(toAmount)
                 .exchangeRate(exchangeRate)

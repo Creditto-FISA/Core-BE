@@ -7,6 +7,7 @@ import org.creditto.core_banking.domain.account.entity.AccountType;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.account.service.AccountService;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,8 +68,9 @@ public class AccountServiceTest {
 
         // when & then
         assertThatThrownBy(() -> accountService.getAccountByAccountNo(invalidAccountNo))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.NOT_FOUND_ACCOUNT);
     }
 
 
