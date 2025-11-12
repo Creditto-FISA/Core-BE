@@ -39,7 +39,7 @@ public enum ErrorBaseCode implements ErrorCode {
      * 403 FORBIDDEN - 리소스 접근 금지
      */
     FORBIDDEN(HttpStatus.FORBIDDEN, 403, "리소스 접근이 거부되었습니다."),
-    INACTIVE_OR_LOCKED_ACCOUNT(HttpStatus.FORBIDDEN, 403-1, "휴면 또는 잠금 상태의 계좌입니다."),
+    INACTIVE_OR_LOCKED_ACCOUNT(HttpStatus.FORBIDDEN, 40301, "휴면 또는 잠금 상태의 계좌입니다."),
 
     /**
      * 404 NOT FOUND - 찾을 수 없음

@@ -17,4 +17,4 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
 exchange:
-    auth-key: ${EX_API_KEY}
+  auth-key: ${EX_API_KEY}

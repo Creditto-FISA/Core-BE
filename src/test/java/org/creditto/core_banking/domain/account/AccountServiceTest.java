@@ -67,8 +67,9 @@ public class AccountServiceTest {
 
         // when & then
         assertThatThrownBy(() -> accountService.getAccountByAccountNo(invalidAccountNo))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.ACCOUNT_NOT_FOUND);
     }
 
 

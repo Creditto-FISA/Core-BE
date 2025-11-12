@@ -90,6 +90,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<BaseResponse<?>> handleNoResourceFoundException(final NoResourceFoundException e) {
+        logWarn(e);
         return ApiResponseUtil.failure(ErrorBaseCode.NOT_FOUND_API);
     }
 

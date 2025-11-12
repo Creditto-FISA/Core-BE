@@ -157,8 +157,9 @@ public class ExchangeServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.INSUFFICIENT_FUNDS);
     }
 
     @Test
@@ -168,11 +169,14 @@ public class ExchangeServiceTest {
         ExchangeReq request = new ExchangeReq(1L, "KRW", "EUR", "DE", new BigDecimal("100.00"));
 
         given(exchangeRateProvider.getExchangeRates()).willReturn(List.of(usdRate, jpyRate));
+        given(accountRepository.findById(1L)).willReturn(Optional.of(testAccount));
+
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("해당 통화(EUR)의 환율 정보를 찾을 수 없습니다.");
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
     }
 
     @Test
@@ -186,7 +190,8 @@ public class ExchangeServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> exchangeService.exchange(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(ErrorBaseCode.NOT_FOUND_ENTITY.getMessage());
+                .isInstanceOf(CustomBaseException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorBaseCode.ACCOUNT_NOT_FOUND);
     }
 }
