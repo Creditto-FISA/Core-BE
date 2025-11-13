@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 송금 내역 조회를 처리하는 API 컨트롤러입니다.
+ * 일회성 및 정기 송금을 포함한 모든 송금 내역을 조회할 수 있습니다.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/core/remittance")
@@ -20,7 +24,12 @@ public class RemittanceQueryController {
 
     private final RemittanceQueryService remittanceService;
 
-    // 조회 컨트롤러
+    /**
+     * 특정 고객(Client)의 모든 송금 내역을 조회합니다.
+     *
+     * @param clientId 송금 내역을 조회할 고객의 ID
+     * @return 해당 고객의 송금 내역 리스트 ({@link OverseasRemittanceResponseDto})
+     */
     @GetMapping
     public BaseResponse<List<OverseasRemittanceResponseDto>> getRemittanceList(@RequestParam String clientId) {
         List<OverseasRemittanceResponseDto> result = remittanceService.getRemittanceList(clientId);

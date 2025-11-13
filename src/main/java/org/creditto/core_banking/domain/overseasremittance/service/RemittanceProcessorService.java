@@ -23,11 +23,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+/**
+ * 일회성 및 정기 해외송금의 실제 처리 로직을 담당하는 서비스입니다.
+ * 이 서비스는 송금 실행에 필요한 모든 단계를 포함하며, 여러 리포지토리에 접근하여
+ * 엔티티 조회, 잔액 확인, 출금, 거래 내역 생성 등의 복합적인 트랜잭션을 수행합니다.
+ * <p>
+ * TODO: 송금의 모든 과정을 처리하여 너무 많은 책임을 지고 있음 -> 책임 나누기
+ */
 @Service
 @Transactional
 @RequiredArgsConstructor
-// 해외송금 공통 로직
-// TODO: 송금의 모든 과정을 처리하여 너무 많은 책임을 지고 있음 -> 책임 나누기
 public class RemittanceProcessorService {
 
     private final OverseasRemittanceRepository remittanceRepository;
@@ -37,7 +42,13 @@ public class RemittanceProcessorService {
     private final TransactionRepository transactionRepository;
     private final RegularRemittanceRepository regularRemittanceRepository;
 
-    // command에서 필요한 데이터를 꺼내서 로직을 수행
+    /**
+     * 전달된 {@link ExecuteRemittanceCommand}를 기반으로 송금 프로세스를 실행합니다.
+     *
+     * @param command 송금 실행에 필요한 모든 데이터를 담은 Command 객체
+     * @return 송금 처리 결과를 담은 응답 DTO
+     * @throws IllegalArgumentException 관련 엔티티를 찾을 수 없거나 잔액이 부족할 경우 발생
+     */
     public OverseasRemittanceResponseDto execute(ExecuteRemittanceCommand command) {
 
         // 관련 엔티티 조회
