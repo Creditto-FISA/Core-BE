@@ -32,15 +32,18 @@ public class RemittanceFeeService {
         BigDecimal exchangeRate = req.exchangeRate();
         String currency = req.currency();
 
+        BigDecimal sendAmountInUSD = getSendAmountInUSD(sendAmount, currency);
+
         // 수수료 계산에 사용될 각 정책 엔티티 조회
-        FlatServiceFee flatFeePolicy = getFlatFeePolicy(sendAmount);
+        FlatServiceFee flatFeePolicy = getFlatFeePolicy(sendAmountInUSD);
         PctServiceFee pctFeePolicy = getPctFeePolicy();
         NetworkFee networkFeePolicy = getNetworkFeePolicy(currency);
 
         // 각 수수료를 원화 기준으로 계산
-        BigDecimal flatFeeInKRW = calculateFlatFee(flatFeePolicy, sendAmount, exchangeRate);
+//        BigDecimal flatFeeInKRW = calculateFlatFee(flatFeePolicy, sendAmount, exchangeRate);
+        BigDecimal flatFeeInKRW = flatFeePolicy.getFeeAmount();
         BigDecimal pctFeeInKRW = calculatePctFee(pctFeePolicy, sendAmount, exchangeRate); // 현재 비활성화(isActive = false)
-        BigDecimal networkFeeInKRW = calculateNetworkFee(networkFeePolicy, currency, exchangeRate);
+        BigDecimal networkFeeInKRW = calculateNetworkFee(networkFeePolicy, exchangeRate);
 
         // 총 수수료 합산
         BigDecimal totalFeeInKRW = flatFeeInKRW.add(pctFeeInKRW).add(networkFeeInKRW);
@@ -57,9 +60,17 @@ public class RemittanceFeeService {
         return feeRecordRepository.save(feeRecord);
     }
 
-    private FlatServiceFee getFlatFeePolicy(BigDecimal sendAmount) {
-        return flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
-            .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmount));
+    private BigDecimal getSendAmountInUSD(BigDecimal sendAmount, String currency) {
+        // TODO: JPY -> USD / CNY -> USD를 계산하기 위한 KRW -> USD 필요. 추후 교체 예정
+        if (currency.equals("JPY")) return sendAmount.multiply(BigDecimal.valueOf(0.0065));
+        else if (currency.equals("CNY")) return sendAmount.multiply(BigDecimal.valueOf(0.13));
+
+        return sendAmount;
+    }
+
+    private FlatServiceFee getFlatFeePolicy(BigDecimal sendAmountInUSD) {
+        return flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmountInUSD)
+            .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmountInUSD));
     }
 
     private PctServiceFee getPctFeePolicy() {
@@ -72,24 +83,21 @@ public class RemittanceFeeService {
             .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
     }
 
-    private BigDecimal calculateFlatFee(FlatServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
-        BigDecimal feeAmountInForeignCurrency = flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
-                .map(FlatServiceFee::getFeeAmount)
-                .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmount));
-
-        // RoundingMode.HALF_UP 할지 DOWN 할지 고민 - 논의 필요
-        return feeAmountInForeignCurrency.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
-    }
+//    private BigDecimal calculateFlatFee(FlatServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
+//        BigDecimal feeAmountInForeignCurrency = flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
+//                .map(FlatServiceFee::getFeeAmount)
+//                .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmount));
+//
+//        // RoundingMode.HALF_UP 할지 DOWN 할지 고민 - 논의 필요
+//        return feeAmountInForeignCurrency.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
+//
+//    }
 
     private BigDecimal calculatePctFee(PctServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
         return sendAmount.multiply(policy.getFeeRate()).multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculateNetworkFee(NetworkFee policy, String currency, BigDecimal exchangeRate) {
-        BigDecimal feeAmountInForeignCurrency = networkFeeRepository.findByCurrencyCode(currency)
-                .map(NetworkFee::getFeeAmount)
-                .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
-
-        return feeAmountInForeignCurrency.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
+    private BigDecimal calculateNetworkFee(NetworkFee policy, BigDecimal exchangeRate) {
+        return policy.getFeeAmount().multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
 }
