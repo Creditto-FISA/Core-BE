@@ -50,11 +50,11 @@ public class RemittanceFeeService {
 
         // FeeRecord 생성
         FeeRecord feeRecord = FeeRecord.builder()
-            .totalFee(totalFeeInKRW)
-            .appliedFlatServiceFee(flatFeePolicy)
-            .appliedPctServiceFee(pctFeePolicy)
-            .appliedNetworkFee(networkFeePolicy)
-            .build();
+                .totalFee(totalFeeInKRW)
+                .appliedFlatServiceFee(flatFeePolicy)
+                .appliedPctServiceFee(pctFeePolicy)
+                .appliedNetworkFee(networkFeePolicy)
+                .build();
 
         // FeeRecord 저장 후 반환
         return feeRecordRepository.save(feeRecord);
@@ -70,17 +70,17 @@ public class RemittanceFeeService {
 
     private FlatServiceFee getFlatFeePolicy(BigDecimal sendAmountInUSD) {
         return flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmountInUSD)
-            .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmountInUSD));
+                .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmountInUSD));
     }
 
     private PctServiceFee getPctFeePolicy() {
-        return pctServiceFeeRepository.findFirstByIsActiveTrue()
-            .orElseThrow(() -> new CustomException("No active percentage service fee found."));
+        return pctServiceFeeRepository.findFirstByOrderByPctServiceFeeIdAsc()
+                .orElseThrow(() -> new CustomException("Percentage service fee policy not found."));
     }
 
     private NetworkFee getNetworkFeePolicy(String currency) {
         return networkFeeRepository.findByCurrencyCode(currency)
-            .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
+                .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
     }
 
 //    private BigDecimal calculateFlatFee(FlatServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
@@ -94,7 +94,14 @@ public class RemittanceFeeService {
 //    }
 
     private BigDecimal calculatePctFee(PctServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
-        return sendAmount.multiply(policy.getFeeRate()).multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
+        // isActive 상태에 따라 분기 처리
+        if (policy != null && policy.getIsActive()) {
+            BigDecimal feeRate = policy.getFeeRate();
+            return sendAmount.multiply(feeRate).multiply(exchangeRate).setScale(0, RoundingMode.DOWN);
+        } else {
+            return BigDecimal.ZERO;
+
+        }
     }
 
     private BigDecimal calculateNetworkFee(NetworkFee policy, BigDecimal exchangeRate) {

@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface PctServiceFeeRepository extends JpaRepository<PctServiceFee, Long> {
-    Optional<PctServiceFee> findFirstByIsActiveTrue();
+    Optional<PctServiceFee> findFirstByOrderByPctServiceFeeIdAsc();
 }
