@@ -1,9 +1,11 @@
 package org.creditto.core_banking.domain.remittancefee.service;
 
 import org.creditto.core_banking.domain.remittancefee.dto.RemittanceFeeReq;
+import org.creditto.core_banking.domain.remittancefee.entity.FeeRecord;
 import org.creditto.core_banking.domain.remittancefee.entity.FlatServiceFee;
 import org.creditto.core_banking.domain.remittancefee.entity.NetworkFee;
 import org.creditto.core_banking.domain.remittancefee.entity.PctServiceFee;
+import org.creditto.core_banking.domain.remittancefee.repository.FeeRecordRepository;
 import org.creditto.core_banking.domain.remittancefee.repository.FlatServiceFeeRepository;
 import org.creditto.core_banking.domain.remittancefee.repository.NetworkFeeRepository;
 import org.creditto.core_banking.domain.remittancefee.repository.PctServiceFeeRepository;
@@ -16,53 +18,77 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class RemittanceFeeService {
 
     private final FlatServiceFeeRepository flatServiceFeeRepository;
     private final PctServiceFeeRepository pctServiceFeeRepository;
     private final NetworkFeeRepository networkFeeRepository;
+    private final FeeRecordRepository feeRecordRepository;
 
-    public BigDecimal calculateTotalFeeInKRW(RemittanceFeeReq req) {
+    public FeeRecord calculateAndSaveFee(RemittanceFeeReq req) {
         BigDecimal sendAmount = req.sendAmount();
         BigDecimal exchangeRate = req.exchangeRate();
         String currency = req.currency();
 
-        // 각 수수료를 원화 기준으로 계산
-        BigDecimal flatFeeInKRW = calculateFlatFee(sendAmount, exchangeRate);
-        BigDecimal pctFeeInKRW = calculatePctFee(sendAmount, exchangeRate); // 현재 비활성화(isActive = false)
-        BigDecimal networkFeeInKRW = calculateNetworkFee(currency, exchangeRate);
+        // 수수료 계산에 사용될 각 정책 엔티티 조회
+        FlatServiceFee flatFeePolicy = getFlatFeePolicy(sendAmount);
+        PctServiceFee pctFeePolicy = getPctFeePolicy();
+        NetworkFee networkFeePolicy = getNetworkFeePolicy(currency);
 
-        // 모든 수수료를 합산 (원화 기준)
-        return flatFeeInKRW.add(pctFeeInKRW).add(networkFeeInKRW);
+        // 각 수수료를 원화 기준으로 계산
+        BigDecimal flatFeeInKRW = calculateFlatFee(flatFeePolicy, sendAmount, exchangeRate);
+        BigDecimal pctFeeInKRW = calculatePctFee(pctFeePolicy, sendAmount, exchangeRate); // 현재 비활성화(isActive = false)
+        BigDecimal networkFeeInKRW = calculateNetworkFee(networkFeePolicy, currency, exchangeRate);
+
+        // 총 수수료 합산
+        BigDecimal totalFeeInKRW = flatFeeInKRW.add(pctFeeInKRW).add(networkFeeInKRW);
+
+        // FeeRecord 생성
+        FeeRecord feeRecord = FeeRecord.builder()
+            .totalFee(totalFeeInKRW)
+            .appliedFlatServiceFee(flatFeePolicy)
+            .appliedPctServiceFee(pctFeePolicy)
+            .appliedNetworkFee(networkFeePolicy)
+            .build();
+
+        // FeeRecord 저장 후 반환
+        return feeRecordRepository.save(feeRecord);
     }
 
-    private BigDecimal calculateFlatFee(BigDecimal sendAmount, BigDecimal exchangeRate) {
-        BigDecimal feeAmountInForeignCurrency = flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
-            .map(FlatServiceFee::getFeeAmount)
+    private FlatServiceFee getFlatFeePolicy(BigDecimal sendAmount) {
+        return flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
             .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmount));
+    }
 
-        // TODO: 송금 금액, 통화 코드로 구간 판별 후 고정 수수료 저장하는 로직으로 변경
+    private PctServiceFee getPctFeePolicy() {
+        return pctServiceFeeRepository.findFirstByIsActiveTrue()
+            .orElseThrow(() -> new CustomException("No active percentage service fee found."));
+    }
+
+    private NetworkFee getNetworkFeePolicy(String currency) {
+        return networkFeeRepository.findByCurrencyCode(currency)
+            .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
+    }
+
+    private BigDecimal calculateFlatFee(FlatServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
+        BigDecimal feeAmountInForeignCurrency = flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(sendAmount)
+                .map(FlatServiceFee::getFeeAmount)
+                .orElseThrow(() -> new CustomException("Flat service fee tier not found for amount: " + sendAmount));
 
         // RoundingMode.HALF_UP 할지 DOWN 할지 고민 - 논의 필요
         return feeAmountInForeignCurrency.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculatePctFee(BigDecimal sendAmount, BigDecimal exchangeRate) {
-        PctServiceFee activeFee = pctServiceFeeRepository.findFirstByIsActiveTrue()
-            .orElseThrow(() -> new CustomException("No active percentage service fee found."));
-
-        BigDecimal feeRate = activeFee.getFeeRate();
-        return sendAmount.multiply(feeRate).multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
+    private BigDecimal calculatePctFee(PctServiceFee policy, BigDecimal sendAmount, BigDecimal exchangeRate) {
+        return sendAmount.multiply(policy.getFeeRate()).multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculateNetworkFee(String currency, BigDecimal exchangeRate) {
+    private BigDecimal calculateNetworkFee(NetworkFee policy, String currency, BigDecimal exchangeRate) {
         BigDecimal feeAmountInForeignCurrency = networkFeeRepository.findByCurrencyCode(currency)
-            .map(NetworkFee::getFeeAmount)
-            .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
-
-        // TODO: 목표 송금 통화코드 비교 후 네트워크 수수료 저장하는 로직으로 변경
+                .map(NetworkFee::getFeeAmount)
+                .orElseThrow(() -> new CustomException("Network fee not found for currency: " + currency));
 
         return feeAmountInForeignCurrency.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
