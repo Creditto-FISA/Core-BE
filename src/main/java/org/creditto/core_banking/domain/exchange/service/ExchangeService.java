@@ -50,7 +50,7 @@ public class ExchangeService {
      * 환전 요청을 처리하는 메인 메서드
      * 환전 방향에 따라 적절한 private 메서드를 호출하여 처리를 위임
      *
-     * @param request 환전 요청 정보 (계좌 ID, 출발/도착 통화, 대상 금액 등)
+     * @param request 환전 요청 정보 (출발/도착 통화, 대상 금액 등)
      * @return 환전 결과 정보 (출발/도착 통화, 적용 환율, 환전 금액)
      */
     @Transactional
