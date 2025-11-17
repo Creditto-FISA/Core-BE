@@ -30,12 +30,15 @@ public class Transaction extends BaseEntity {
 
     private Long typeId; // 거래 종류 ID
 
-    public static Transaction of(Account account, BigDecimal txnAmount, TxnType txnType, Long typeId) {
+    private TxnResult txnResult; // 거래 결과
+
+    public static Transaction of(Account account, BigDecimal txnAmount, TxnType txnType, Long typeId, TxnResult txnResult) {
         return Transaction.builder()
                 .account(account)
                 .txnAmount(txnAmount)
                 .txnType(txnType)
                 .typeId(typeId)
+                .txnResult(txnResult)
                 .build();
     }
 }

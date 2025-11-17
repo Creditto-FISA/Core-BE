@@ -2,16 +2,15 @@ package org.creditto.core_banking.domain.transaction.service;
 
 import lombok.RequiredArgsConstructor;
 import org.creditto.core_banking.domain.account.entity.Account;
-import org.creditto.core_banking.domain.account.repository.AccountRepository;
-import org.creditto.core_banking.domain.transaction.dto.TransactionReq;
 import org.creditto.core_banking.domain.transaction.dto.TransactionRes;
 import org.creditto.core_banking.domain.transaction.entity.Transaction;
+import org.creditto.core_banking.domain.transaction.entity.TxnResult;
+import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.domain.transaction.repository.TransactionRepository;
-import org.creditto.core_banking.global.response.error.ErrorBaseCode;
-import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -19,7 +18,6 @@ import java.util.List;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
 
     @Transactional(readOnly = true)
     public List<TransactionRes> findByAccountId(Long accountId) {
@@ -30,17 +28,24 @@ public class TransactionService {
                 .toList();
     }
 
+    /**
+     * 거래 내역을 데이터베이스에 저장
+     * 해당 메서드는 각 거래 전략에서 호출
+     * 
+     * @param account 거래가 발생한 계좌
+     * @param amount 거래 금액
+     * @param txnType 거래 유형
+     * @return 저장된 Transaction 엔티티
+     */
     @Transactional
-    public TransactionRes saveTransaction(TransactionReq req) {
-
-        Account account = accountRepository.findById(req.accountId())
-                .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
-
+    public TransactionRes saveTransaction(Account account, BigDecimal amount, TxnType txnType, Long typeId, TxnResult txnResult) {
+        // 새로운 Transaction 엔티티 생성
         Transaction transaction = Transaction.of(
                 account,
-                req.txnAmount(),
-                req.txnType(),
-                req.typeId()
+                amount,
+                txnType,
+                typeId,
+                txnResult
         );
 
         Transaction savedTransaction = transactionRepository.save(transaction);
