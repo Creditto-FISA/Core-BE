@@ -27,7 +27,7 @@ public class TransactionStrategyFactory {
 
     /**
      * Transaction Type에 맞는 전략 구현체를 반환
-     * @param txnType: 거래 유형
+     * @param txnType 거래 유형
      * @return 해당 거래 유형에 맞는 strategy 객체
      */
     public TransactionStrategy getStrategy(TxnType txnType) {

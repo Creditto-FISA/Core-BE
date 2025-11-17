@@ -36,7 +36,9 @@ public class TransactionService {
      * @param account 거래가 발생한 계좌
      * @param amount 거래 금액
      * @param txnType 거래 유형
-     * @return 저장된 Transaction 엔티티
+     * @param typeId 거래 관련 ID
+     * @param txnResult 거래 결과
+     * @return 저장된 거래 정보 DTO
      */
 
     // saveTransaction 메서드는 주 비즈니스 로직(계좌 입출금 등)의 트랜잭션과 분리되어야 함
