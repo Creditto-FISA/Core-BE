@@ -3,12 +3,14 @@ package org.creditto.core_banking.domain.overseasremittance.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.creditto.core_banking.domain.account.entity.Account;
+import org.creditto.core_banking.domain.exchange.entity.Exchange;
+import org.creditto.core_banking.domain.remittancefee.entity.FeeRecord;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
-import org.creditto.core_banking.domain.remittancefee.entity.RemittanceFee;
 import org.creditto.core_banking.global.common.BaseEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 해외송금 거래 정보를 나타내는 엔티티입니다.
@@ -38,17 +40,6 @@ public class OverseasRemittance extends BaseEntity {
     private Account account;
 
     /**
-     * 송금을 요청한 고객의 ID
-     */
-    private String clientId;
-
-    /**
-     * 적용된 수수료 정보
-     */
-    @OneToOne(fetch = FetchType.LAZY)
-    private RemittanceFee fee;
-
-    /**
      * 정기송금 정보 (일회성 송금의 경우 null)
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,19 +47,46 @@ public class OverseasRemittance extends BaseEntity {
     private RegularRemittance recur;
 
     /**
-     * 적용된 환율
+     * 적용된 환전 내역
      */
-    private BigDecimal exchangeRate;
+    @OneToOne(fetch = FetchType.LAZY)
+    private Exchange exchange;
 
     /**
-     * 보낸 금액 (원화 기준)
+     * 적용된 수수료 내역
+     */
+    @OneToOne(fetch = FetchType.LAZY)
+    private FeeRecord feeRecord;
+
+    /**
+     * 송금을 요청한 고객의 ID
+     */
+    private String clientId;
+
+    /**
+     * 송금 통화
+     */
+    private String sendCurrency;
+
+    /**
+     * 수취 통화
+     */
+    private String receiveCurrency;
+
+    /**
+     * 송금액 (원화)
      */
     private BigDecimal sendAmount;
 
     /**
-     * 최종 수취 금액 (수취인이 받게 될 금액)
+     * 최종 수취 금액 (외화)
      */
     private BigDecimal receiveAmount;
+
+    /**
+     * 송금 시작일
+     */
+    private LocalDate startDate;
 
     /**
      * 송금 처리 상태
@@ -80,35 +98,44 @@ public class OverseasRemittance extends BaseEntity {
      * OverseasRemittance 엔티티를 생성하는 정적 팩토리 메서드입니다.
      * 초기 송금 상태는 PENDING으로 설정됩니다.
      *
-     * @param recipient      수취인 엔티티
-     * @param account        출금 계좌 엔티티
-     * @param clientId       고객 ID
-     * @param fee            수수료 엔티티
-     * @param recur          정기송금 엔티티 (선택 사항)
-     * @param exchangeRate   적용 환율
-     * @param sendAmount     송금액
-     * @param receiveAmount  수취액
+     * @param recipient       수취인 엔티티
+     * @param account         출금 계좌 엔티티
+     * @param recur           정기송금 엔티티 (선택 사항)
+     * @param exchange        적용 환전 내역
+     * @param feeRecord       적용된 수수료 내역
+     * @param clientId        고객 ID
+     * @param sendCurrency    송금 통화
+     * @param receiveCurrency 수취 통화
+     * @param sendAmount      송금액
+     * @param receiveAmount   수취액
+     * @param startDate       송금 시작일
      * @return 새로운 OverseasRemittance 객체
      */
     public static OverseasRemittance of(
             Recipient recipient,
             Account account,
-            String clientId,
-            RemittanceFee fee,
             RegularRemittance recur,
-            BigDecimal exchangeRate,
+            Exchange exchange,
+            FeeRecord feeRecord,
+            String clientId,
+            String sendCurrency,
+            String receiveCurrency,
             BigDecimal sendAmount,
-            BigDecimal receiveAmount
+            BigDecimal receiveAmount,
+            LocalDate startDate
     ){
         return OverseasRemittance.builder()
                 .recipient(recipient)
                 .account(account)
-                .clientId(clientId)
-                .fee(fee)
                 .recur(recur)
-                .exchangeRate(exchangeRate)
+                .exchange(exchange)
+                .feeRecord(feeRecord)
+                .clientId(clientId)
+                .sendCurrency(sendCurrency)
+                .receiveCurrency(receiveCurrency)
                 .sendAmount(sendAmount)
                 .receiveAmount(receiveAmount)
+                .startDate(startDate)
                 .remittanceStatus(RemittanceStatus.PENDING)   //기본 상태 PENDING
                 .build();
     }

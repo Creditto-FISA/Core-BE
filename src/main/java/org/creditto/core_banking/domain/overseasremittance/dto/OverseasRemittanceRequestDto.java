@@ -8,10 +8,12 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
- * 클라이언트로부터 해외송금 요청을 받기 위한 DTO(Data Transfer Object)입니다.
- * 각 필드는 {@link jakarta.validation.constraints} 애노테이션을 통해 유효성 검사가 수행됩니다.
+ * 클라이언트로부터 해외송금(일회성, 정기) 요청을 받기 위한 DTO(Data Transfer Object)입니다.
+ * 내부 식별자(ID) 대신, 계좌 번호, 수취인 상세 정보 등 비즈니스적인 의미를 갖는 원시 데이터를 직접 받습니다.
+ * 이를 통해 외부 서비스와 코어 뱅킹 시스템 간의 결합도를 낮춥니다.
  */
 @Getter
 @Builder
@@ -19,51 +21,93 @@ import java.math.BigDecimal;
 public class OverseasRemittanceRequestDto {
 
     /**
-     * 고객 ID
+     * 송금을 요청하는 고객의 식별자
      */
     @NotBlank(message = "고객 ID는 필수입니다.")
     private String clientId;
 
     /**
-     * 수취인 ID
+     * 출금될 계좌의 번호
      */
-    @NotNull(message = "수취인 ID는 필수입니다.")
-    private Long recipientId;
+    @NotBlank(message = "출금 계좌번호는 필수입니다.")
+    private String accountNumber;
 
     /**
-     * 출금계좌 ID
+     * 수취인의 상세 정보
      */
-    @NotNull(message = "출금계좌 ID는 필수입니다.")
-    private Long accountId;
+    @NotNull(message = "수취인 정보는 필수입니다.")
+    private RecipientInfo recipientInfo;
 
     /**
-     * 수수료 정책 ID
+     * 정기송금인 경우의 정기송금 식별자 (일회성 송금의 경우 null)
      */
-    @NotNull(message = "수수료 정책 ID는 필수입니다.")
-    private Long feeId;
+    private Long recurId;
 
     /**
-     * 정기송금 ID (선택 사항)
+     * 송금 시작일 (정기송금의 경우 사용)
      */
-    private Long regRemId;
+    private LocalDate startDate;
 
     /**
-     * 적용 환율
+     * 보내는 통화 (e.g. "KRW")
      */
-    @NotNull(message = "환율은 필수입니다.")
-    @Positive(message = "환율은 0보다 커야 합니다.")
-    private BigDecimal exchangeRate;
+    @NotBlank(message = "송금 통화는 필수입니다.")
+    private String sendCurrency;
 
     /**
-     * 송금 통화 코드 (e.g., "USD")
+     * 받는 통화 (e.g. "USD")
      */
-    @NotBlank(message = "통화코드는 필수입니다.")
-    private String currencyCode;
+    @NotBlank(message = "수취 통화는 필수입니다.")
+    private String receiveCurrency;
 
     /**
-     * 송금액
+     * 보내는 금액 (송금 통화 기준)
      */
     @NotNull(message = "송금액은 필수입니다.")
     @Positive(message = "송금액은 0보다 커야 합니다.")
     private BigDecimal sendAmount;
+
+    /**
+     * 해외송금 수취인의 상세 정보를 담는 내부 클래스입니다.
+     */
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class RecipientInfo {
+        /**
+         * 수취인 이름
+         */
+        @NotBlank(message = "수취인 이름은 필수입니다.")
+        private String name;
+
+        /**
+         * 수취인의 계좌번호
+         */
+        @NotBlank(message = "수취인 계좌번호는 필수입니다.")
+        private String accountNumber;
+
+        /**
+         * 수취인 은행의 이름
+         */
+        @NotBlank(message = "수취인 은행 이름은 필수입니다.")
+        private String bankName;
+
+        /**
+         * 수취인 은행의 식별 코드 (e.g. SWIFT Code)
+         */
+        @NotBlank(message = "수취인 은행코드는 필수입니다.")
+        private String bankCode;
+
+        /**
+         * 수취인 연락처
+         */
+        @NotBlank(message = "수취인 연락처는 필수입니다.")
+        private String phoneNo;
+
+        /**
+         * 수취인 거주 국가 (ISO 3166-1 Alpha-3 code, e.g. "USA")
+         */
+        @NotBlank(message = "수취인 국가는 필수입니다.")
+        private String country;
+    }
 }

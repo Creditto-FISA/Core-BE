@@ -6,6 +6,7 @@ import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemitt
 import org.creditto.core_banking.domain.overseasremittance.entity.RemittanceStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 해외송금 처리 결과 및 조회 결과를 클라이언트에게 반환하기 위한 DTO(Data Transfer Object)입니다.
@@ -20,9 +21,24 @@ public class OverseasRemittanceResponseDto {
     private Long remittanceId;
 
     /**
+     * 고객 ID
+     */
+    private String clientId;
+
+    /**
+     * 수취인 ID
+     */
+    private Long recipientId;
+
+    /**
      * 수취인 이름
      */
     private String recipientName;
+
+    /**
+     * 출금 계좌 ID
+     */
+    private Long accountId;
 
     /**
      * 출금 계좌 번호
@@ -30,24 +46,34 @@ public class OverseasRemittanceResponseDto {
     private String accountNo;
 
     /**
-     * 고객 ID
-     */
-    private String clientId;
-
-    /**
-     * 적용된 수수료 정책 ID
-     */
-    private Long feeId;
-
-    /**
      * 정기송금 ID (일회성 송금의 경우 null)
      */
-    private Long regRemId;
+    private Long recurId;
+
+    /**
+     * 환전 ID
+     */
+    private Long exchangeId;
 
     /**
      * 적용 환율
      */
     private BigDecimal exchangeRate;
+
+    /**
+     * 수수료 내역 ID
+     */
+    private Long feeRecordId;
+
+    /**
+     * 송금 통화
+     */
+    private String sendCurrency;
+
+    /**
+     * 수취 통화
+     */
+    private String receiveCurrency;
 
     /**
      * 송금액
@@ -58,6 +84,11 @@ public class OverseasRemittanceResponseDto {
      * 최종 수취 금액
      */
     private BigDecimal receiveAmount;
+
+    /**
+     * 송금 시작일
+     */
+    private LocalDate startDate;
 
     /**
      * 송금 처리 상태
@@ -73,19 +104,24 @@ public class OverseasRemittanceResponseDto {
     public static OverseasRemittanceResponseDto from(OverseasRemittance overseasRemittance) {
         return OverseasRemittanceResponseDto.builder()
                 .remittanceId(overseasRemittance.getRemittanceId())
-                .recipientName(overseasRemittance.getRecipient().getName())
-                .accountNo(overseasRemittance.getAccount().getAccountNo())
                 .clientId(overseasRemittance.getClientId())
-                .feeId(overseasRemittance.getFee().getFeeId())
-                .regRemId(overseasRemittance.getRecur() != null
+                .recipientId(overseasRemittance.getRecipient().getRecipientId())
+                .recipientName(overseasRemittance.getRecipient().getName())
+                .accountId(overseasRemittance.getAccount().getId())
+                .accountNo(overseasRemittance.getAccount().getAccountNo())
+                .recurId(overseasRemittance.getRecur() != null
                         ? overseasRemittance.getRecur().getRegRemId()
-                        : null)        // 정기송금이 아닌경우 null 반환
-                .exchangeRate(overseasRemittance.getExchangeRate())
+                        : null)
+                .exchangeId(overseasRemittance.getExchange().getId())
+                .exchangeRate(overseasRemittance.getExchange().getExchangeRate())
+                .feeRecordId(overseasRemittance.getFeeRecord().getFeeId())
+                .sendCurrency(overseasRemittance.getSendCurrency())
+                .receiveCurrency(overseasRemittance.getReceiveCurrency())
                 .sendAmount(overseasRemittance.getSendAmount())
                 .receiveAmount(overseasRemittance.getReceiveAmount())
+                .startDate(overseasRemittance.getStartDate())
                 .remittanceStatus(overseasRemittance.getRemittanceStatus())
                 .build();
     }
 
 }
-
