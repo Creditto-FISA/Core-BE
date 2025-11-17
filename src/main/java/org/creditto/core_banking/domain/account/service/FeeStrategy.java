@@ -25,15 +25,8 @@ public class FeeStrategy implements TransactionStrategy {
     @Override
     public void execute(Account account, BigDecimal amount, Long typeId) {
 
-        try {
-            TxnResult result = TxnResult.SUCCESS;
-            account.withdraw(amount);
-            transactionService.saveTransaction(account, amount, getTxnType(), typeId, result);
-
-        } catch (CustomBaseException e) {
-            TxnResult result = TxnResult.FAILURE;
-            transactionService.saveTransaction(account, amount, getTxnType(), typeId, result);
-            throw e;
-        }
+        TxnResult result = TxnResult.SUCCESS;
+        account.withdraw(amount);
+        transactionService.saveTransaction(account, amount, getTxnType(), typeId, result);
     }
 }
