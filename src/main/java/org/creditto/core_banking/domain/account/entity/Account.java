@@ -7,8 +7,8 @@ import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.creditto.core_banking.global.response.exception.CustomBaseException;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom; // Changed from java.util.Random
 import java.util.Map;
-import java.util.Random;
 
 @Entity
 @Getter
@@ -54,7 +54,7 @@ public class Account extends BaseEntity {
             AccountType.INVESTMENT, "520"
     );
     private static final int ACCOUNT_NO_LENGTH = 13;
-    private static final Random RANDOM = new Random();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     // 계좌 번호 생성
     public static String generateAccountNo(AccountType accountType) {

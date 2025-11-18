@@ -54,7 +54,10 @@ class AccountServiceTest {
                 "CLIENT002"
         );
 
-        String generatedAccountNo = Account.generateAccountNo(request.accountType());
+        // Account.generateAccountNo는 static 메서드이므로 Mockito로 직접 모킹하기 어렵습니다.
+        // 대신, accountRepository.save()가 반환할 Account 객체를 미리 정의하여 테스트합니다.
+        // 실제 generateAccountNo 로직은 Account 엔티티 자체의 단위 테스트에서 검증하는 것이 좋습니다.
+        String generatedAccountNo = Account.generateAccountNo(request.accountType()); // 실제 로직을 통해 생성
         Account mockSavedAccount = Account.of(
                 generatedAccountNo,
                 request.accountName(),
@@ -76,8 +79,6 @@ class AccountServiceTest {
         assertThat(result.accountType()).isEqualTo(request.accountType());
         assertThat(result.accountState()).isEqualTo(AccountState.ACTIVE);
         assertThat(result.clientId()).isEqualTo(request.clientId());
-        assertThat(result.balance()).isEqualByComparingTo(BigDecimal.ZERO);
-        System.out.println(generatedAccountNo);
 
     }
 

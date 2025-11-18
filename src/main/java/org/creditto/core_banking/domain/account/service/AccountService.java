@@ -24,17 +24,19 @@ public class AccountService {
 
 
     /**
-     2      * 새로운 계좌를 생성
-     3      * 계좌명, 계좌 종류, 클라이언트 ID, 초기 잔액을 받아 계좌를 생성하고 저장
-     4      * 계좌 번호는 Account 엔티티의 generateAccountNo 메서드를 통해 자동으로 생성
-     5      * 신규 계좌는 기본적으로 ACTIVE 상태로 생성
-     6      *
-     7      * @param request 계좌 생성에 필요한 정보를 담은 AccountCreateReq DTO
-     8      * @return 생성된 계좌 정보를 담은 AccountRes DTO
-     9      */
+     * 새로운 계좌를 생성
+     * 계좌명, 계좌 종류, 클라이언트 ID, 초기 잔액을 받아 계좌를 생성하고 저장
+     * 계좌 번호는 Account 엔티티의 generateAccountNo 메서드를 통해 자동으로 생성
+     * 신규 계좌는 기본적으로 ACTIVE 상태로 생성
+     * @param request 계좌 생성에 필요한 정보를 담은 AccountCreateReq DTO
+     * @return 생성된 계좌 정보를 담은 AccountRes DTO
+     */
     @Transactional
     public AccountRes createAccount(AccountCreateReq request) {
-        String accountNo = Account.generateAccountNo(request.accountType());
+        String accountNo;
+        do {
+            accountNo = Account.generateAccountNo(request.accountType());
+        } while (accountRepository.findByAccountNo(accountNo).isPresent());
 
         Account account = Account.of(
                 accountNo,
