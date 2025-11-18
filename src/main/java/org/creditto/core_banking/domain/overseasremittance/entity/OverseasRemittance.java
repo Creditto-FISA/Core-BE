@@ -8,6 +8,7 @@ import org.creditto.core_banking.domain.remittancefee.entity.FeeRecord;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
 import org.creditto.core_banking.global.common.BaseEntity;
+import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,12 +32,14 @@ public class OverseasRemittance extends BaseEntity {
      * 수취인 정보
      */
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_id", nullable = false)
     private Recipient recipient;
 
     /**
      * 출금 계좌 정보
      */
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     /**
@@ -50,12 +53,14 @@ public class OverseasRemittance extends BaseEntity {
      * 적용된 환전 내역
      */
     @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exchange_id", nullable = false)
     private Exchange exchange;
 
     /**
      * 적용된 수수료 내역
      */
     @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fee_record_id", nullable = false)
     private FeeRecord feeRecord;
 
     /**
@@ -66,12 +71,14 @@ public class OverseasRemittance extends BaseEntity {
     /**
      * 송금 통화
      */
-    private String sendCurrency;
+    @Enumerated(EnumType.STRING)
+    private CurrencyCode sendCurrency;
 
     /**
      * 수취 통화
      */
-    private String receiveCurrency;
+    @Enumerated(EnumType.STRING)
+    private CurrencyCode receiveCurrency;
 
     /**
      * 송금액 (원화)
@@ -118,8 +125,8 @@ public class OverseasRemittance extends BaseEntity {
             Exchange exchange,
             FeeRecord feeRecord,
             String clientId,
-            String sendCurrency,
-            String receiveCurrency,
+            CurrencyCode sendCurrency,
+            CurrencyCode receiveCurrency,
             BigDecimal sendAmount,
             BigDecimal receiveAmount,
             LocalDate startDate
