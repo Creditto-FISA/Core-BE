@@ -35,5 +35,4 @@ public class PctServiceFee extends BaseEntity {
                 .isActive(isActive)
                 .build();
     }
-
 }

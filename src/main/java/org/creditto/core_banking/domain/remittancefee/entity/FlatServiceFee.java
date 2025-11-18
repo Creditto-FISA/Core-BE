@@ -34,5 +34,4 @@ public class FlatServiceFee extends BaseEntity {
                 .feeAmount(feeAmount)
                 .build();
     }
-
 }

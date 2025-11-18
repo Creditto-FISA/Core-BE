@@ -2,9 +2,6 @@ package org.creditto.core_banking.domain.remittancefee.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.creditto.core_banking.domain.remittancefee.entity.FlatServiceFee;
-import org.creditto.core_banking.domain.remittancefee.entity.NetworkFee;
-import org.creditto.core_banking.domain.remittancefee.entity.PctServiceFee;
 import org.creditto.core_banking.global.common.BaseEntity;
 
 import java.math.BigDecimal;

@@ -35,5 +35,4 @@ public class NetworkFee extends BaseEntity {
                 .feeAmount(feeAmount)
                 .build();
     }
-
 }
