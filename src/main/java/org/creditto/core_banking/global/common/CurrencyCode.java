@@ -72,8 +72,8 @@ public enum CurrencyCode {
      */
     @JsonCreator
     public static CurrencyCode from(String curUnit) {
-        if (curUnit == null) {
-            return null;
+        if (curUnit == null || curUnit.isEmpty()) {
+            throw new CustomBaseException(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
         }
 
         String codeToFind = parseCurrencyCode(curUnit).toUpperCase();

@@ -69,15 +69,24 @@ public class ExchangeService {
      * @return 환전 처리 결과
      */
     private ExchangeRes performExchange(ExchangeReq request, Map<String, ExchangeRateRes> rateMap, boolean isKrwToForeign) {
-        // 1. 외화 통화 결정
+        // 1. 외화 통화
         CurrencyCode foreignCurrency = isKrwToForeign ? request.toCurrency() : request.fromCurrency();
 
-        // 2. 환율 정보 조회 및 계산
-        BigDecimal baseRateFromApi = getBaseRateForCurrency(rateMap, foreignCurrency);
+        // 2. USD 환율 정보 미리 조회
+        BigDecimal exchangeRateUSD = getBaseRateForCurrency(rateMap, CurrencyCode.USD);
+
+        // 3. 환율 정보 조회 및 계산
+        BigDecimal baseRateFromApi;
+        if (foreignCurrency == CurrencyCode.USD) {
+            baseRateFromApi = exchangeRateUSD; // USD인 경우 미리 조회한 값 재사용
+        } else {
+            baseRateFromApi = getBaseRateForCurrency(rateMap, foreignCurrency);
+        }
+
         BigDecimal adjustedBaseRate = baseRateFromApi.divide(new BigDecimal(foreignCurrency.getUnit()), ADJUSTED_RATE_SCALE, RoundingMode.HALF_UP);
         BigDecimal appliedRate = calculateAppliedRate(adjustedBaseRate, isKrwToForeign);
 
-        // 3. 송금액(fromAmount) 및 수취액(toAmount) 계산
+        // 4. 송금액 및 수취액 계산
         BigDecimal fromAmount;
         BigDecimal toAmount;
         if (isKrwToForeign) { // 원화 -> 외화
@@ -88,11 +97,8 @@ public class ExchangeService {
             toAmount = fromAmount.multiply(appliedRate).setScale(0, RoundingMode.FLOOR); // 원화 수취액
         }
 
-        // 4. 환전 내역 저장
+        // 5. 환전 내역 저장
         Exchange savedExchange = saveExchangeHistory(request, fromAmount, toAmount, baseRateFromApi);
-
-        // 5. USD 환율 정보 조회
-        BigDecimal exchangeRateUSD = getBaseRateForCurrency(rateMap, CurrencyCode.USD);
 
         // 6. 최종 결과 반환
         return new ExchangeRes(
