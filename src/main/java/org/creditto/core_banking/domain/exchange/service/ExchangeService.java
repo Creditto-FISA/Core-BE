@@ -31,7 +31,7 @@ public class ExchangeService {
     private static final int ADJUSTED_RATE_SCALE = 4;
 
     /**
-     * 최신 환율 정보를 조회하여 반환합니다.
+     * 최신 환율 정보를 조회하여 반환
      * @return 통화 코드를 키로 하는 환율 정보 맵
      */
     public Map<String, ExchangeRateRes> getLatestRates() {
@@ -39,7 +39,7 @@ public class ExchangeService {
     }
 
     /**
-     * 환전 요청을 처리하는 메인 메서드입니다.
+     * 환전 요청을 처리하는 메인 메서드
      * @param request 환전 요청 정보 (from, to, 금액)
      * @return 환전 처리 결과
      */
@@ -62,7 +62,7 @@ public class ExchangeService {
     }
 
     /**
-     * 실제 환전 계산 로직을 수행하는 내부 메서드입니다.
+     * 실제 환전 계산 로직을 수행하는 내부 메서드
      * @param request 환전 요청 정보
      * @param rateMap 조회된 전체 환율 맵
      * @param isKrwToForeign 원화에서 외화로의 환전 여부 (true: 원화->외화, false: 외화->원화)
@@ -123,7 +123,7 @@ public class ExchangeService {
     }
 
     /**
-     * 환율 맵에서 특정 통화에 대한 환율 정보를 찾습니다.
+     * 환율 맵에서 특정 통화에 대한 환율 정보 찾음
      * @param rateMap 전체 환율 맵
      * @param currency 조회할 통화
      * @return 해당 통화의 환율 정보 DTO
@@ -134,7 +134,7 @@ public class ExchangeService {
     }
 
     /**
-     * 환전 내역을 데이터베이스에 저장합니다.
+     * 환전 내역을 데이터베이스에 저장
      * @param exchangeReq 원본 환전 요청
      * @param fromAmount 계산된 송금액
      * @param toAmount 계산된 수취액
