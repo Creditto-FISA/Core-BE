@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemittance;
 import org.creditto.core_banking.domain.overseasremittance.entity.RemittanceStatus;
+import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -68,12 +69,12 @@ public class OverseasRemittanceResponseDto {
     /**
      * 송금 통화
      */
-    private String sendCurrency;
+    private CurrencyCode sendCurrency;
 
     /**
      * 수취 통화
      */
-    private String receiveCurrency;
+    private CurrencyCode receiveCurrency;
 
     /**
      * 송금액
@@ -114,7 +115,7 @@ public class OverseasRemittanceResponseDto {
                         : null)
                 .exchangeId(overseasRemittance.getExchange().getId())
                 .exchangeRate(overseasRemittance.getExchange().getExchangeRate())
-                .feeRecordId(overseasRemittance.getFeeRecord().getFeeId())
+                .feeRecordId(overseasRemittance.getFeeRecord().getFeeRecordId())
                 .sendCurrency(overseasRemittance.getSendCurrency())
                 .receiveCurrency(overseasRemittance.getReceiveCurrency())
                 .sendAmount(overseasRemittance.getSendAmount())

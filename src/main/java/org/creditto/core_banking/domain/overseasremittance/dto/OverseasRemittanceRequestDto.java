@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,13 +53,13 @@ public class OverseasRemittanceRequestDto {
      * 보내는 통화 (e.g. "KRW")
      */
     @NotBlank(message = "송금 통화는 필수입니다.")
-    private String sendCurrency;
+    private CurrencyCode sendCurrency;
 
     /**
      * 받는 통화 (e.g. "USD")
      */
     @NotBlank(message = "수취 통화는 필수입니다.")
-    private String receiveCurrency;
+    private CurrencyCode receiveCurrency;
 
     /**
      * 보내는 금액 (송금 통화 기준)
