@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.account;
 
+import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.entity.AccountState;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -41,6 +43,43 @@ class AccountServiceTest {
 
     @InjectMocks
     private AccountService accountService;
+
+    @Test
+    @DisplayName("계좌 생성 성공")
+    void createAccount_Success() {
+        // Given
+        AccountCreateReq request = new AccountCreateReq(
+                "새로운 계좌",
+                AccountType.DEPOSIT,
+                "CLIENT002"
+        );
+
+        String generatedAccountNo = Account.generateAccountNo(request.accountType());
+        Account mockSavedAccount = Account.of(
+                generatedAccountNo,
+                request.accountName(),
+                BigDecimal.ZERO,
+                request.accountType(),
+                AccountState.ACTIVE,
+                request.clientId()
+        );
+        // ID는 save 시점에 부여된다고 가정
+        given(accountRepository.save(any(Account.class))).willReturn(mockSavedAccount);
+
+        // When
+        AccountRes result = accountService.createAccount(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.accountNo()).isEqualTo(generatedAccountNo);
+        assertThat(result.accountName()).isEqualTo(request.accountName());
+        assertThat(result.accountType()).isEqualTo(request.accountType());
+        assertThat(result.accountState()).isEqualTo(AccountState.ACTIVE);
+        assertThat(result.clientId()).isEqualTo(request.clientId());
+        assertThat(result.balance()).isEqualByComparingTo(BigDecimal.ZERO);
+        System.out.println(generatedAccountNo);
+
+    }
 
     @Test
     @DisplayName("거래 처리 로직(processTransaction) 성공")

@@ -1,8 +1,10 @@
 package org.creditto.core_banking.domain.account.service;
 
 import lombok.RequiredArgsConstructor;
+import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
 import org.creditto.core_banking.domain.account.entity.Account;
+import org.creditto.core_banking.domain.account.entity.AccountState;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
@@ -20,6 +22,33 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionStrategyFactory strategyFactory;
 
+
+    /**
+     2      * 새로운 계좌를 생성
+     3      * 계좌명, 계좌 종류, 클라이언트 ID, 초기 잔액을 받아 계좌를 생성하고 저장
+     4      * 계좌 번호는 Account 엔티티의 generateAccountNo 메서드를 통해 자동으로 생성
+     5      * 신규 계좌는 기본적으로 ACTIVE 상태로 생성
+     6      *
+     7      * @param request 계좌 생성에 필요한 정보를 담은 AccountCreateReq DTO
+     8      * @return 생성된 계좌 정보를 담은 AccountRes DTO
+     9      */
+    @Transactional
+    public AccountRes createAccount(AccountCreateReq request) {
+        String accountNo = Account.generateAccountNo(request.accountType());
+
+        Account account = Account.of(
+                accountNo,
+                request.accountName(),
+                BigDecimal.ZERO,
+                request.accountType(),
+                AccountState.ACTIVE,
+                request.clientId()
+        );
+
+        Account savedAccount = accountRepository.save(account);
+        return AccountRes.from(savedAccount);
+    }
+
     /**
      * 거래 유형(TxnType)에 따라 적절한 거래 전략 실행
      * @param accountId 대상 계좌 ID
@@ -29,14 +58,14 @@ public class AccountService {
      */
     @Transactional
     public void processTransaction(Long accountId, BigDecimal amount, TxnType txnType, Long typeId) {
-        // 1. 팩토리에서 거래 유행에 맞는 전략 호출
+        // 팩토리에서 거래 유행에 맞는 전략 호출
         TransactionStrategy strategy = strategyFactory.getStrategy(txnType);
 
-        // 2. 계좌 정보 조회
+        // 계좌 정보 조회
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
 
-        // 3. 거래 타입 실행
+        // 거래 타입 실행
         strategy.execute(account, amount, typeId);
     }
 
