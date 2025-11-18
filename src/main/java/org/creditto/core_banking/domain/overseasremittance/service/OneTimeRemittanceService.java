@@ -1,20 +1,23 @@
 package org.creditto.core_banking.domain.overseasremittance.service;
 
 import lombok.RequiredArgsConstructor;
+import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.exchange.service.ExchangeService;
-import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
 import org.creditto.core_banking.domain.overseasremittance.dto.ExecuteRemittanceCommand;
 import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceRequestDto;
 import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceResponseDto;
+import org.creditto.core_banking.domain.recipient.entity.Recipient;
+import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
+import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 해외송금 유스케이스를 조정하는 Application Service 입니다.
- * 외부(Controller)의 요청을 받아 도메인 로직을 실행하도록 오케스트레이션 역할을 수행합니다.
- * 1. {@link ExecuteRemittanceCommand#from(OverseasRemittanceRequestDto, AccountRepository, RecipientRepository, ExchangeService)}를 호출하여 Command 객체 생성을 위임합니다.
- * 2. 생성된 Command를 실제 비즈니스 로직을 담고 있는 Domain Service ({@link RemittanceProcessorService})에 전달하여 실행을 위임합니다.
+ * 외부(Controller)의 요청을 받아 도메인 객체(Command)를 생성하고,
+ * 도메인 로직 실행을 다른 도메인 서비스({@link RemittanceProcessorService})에 위임하는 오케스트레이션 역할을 수행합니다.
  */
 @Service
 @Transactional
@@ -33,15 +36,37 @@ public class OneTimeRemittanceService {
      * @return 송금 처리 결과
      */
     public OverseasRemittanceResponseDto processRemittance(OverseasRemittanceRequestDto request) {
-        // 1. Command 생성 위임: DTO를 내부 Command 객체로 변환
-        ExecuteRemittanceCommand command = ExecuteRemittanceCommand.from(
-            request,
-            accountRepository,
-            recipientRepository,
-            exchangeService
-        );
+        // 1. 출금 계좌 조회 및 ID 확보
+        Account account = accountRepository.findByAccountNo(request.getAccountNumber())
+                .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
 
-        // 2. Command 실행 위임: 생성된 Command를 통해 실제 송금 로직 실행
+        // 2. 수취인 정보 처리 (항상 신규 생성)
+        OverseasRemittanceRequestDto.RecipientInfo recipientInfo = request.getRecipientInfo();
+        Recipient newRecipient = Recipient.of(
+                recipientInfo.getName(),
+                recipientInfo.getPhoneNo(),
+                null, // phoneCc는 DTO에 없으므로 null 처리
+                recipientInfo.getBankName(),
+                recipientInfo.getBankCode(),
+                recipientInfo.getAccountNumber(),
+                recipientInfo.getCountry(),
+                request.getReceiveCurrency()
+        );
+        Recipient savedRecipient = recipientRepository.save(newRecipient);
+
+        // 3. ExecuteRemittanceCommand 생성
+        ExecuteRemittanceCommand command = ExecuteRemittanceCommand.builder()
+                .clientId(request.getClientId())
+                .recipientId(savedRecipient.getRecipientId())
+                .accountId(account.getId())
+                .regRemId(request.getRecurId())
+                .sendCurrency(request.getSendCurrency())
+                .receiveCurrency(request.getReceiveCurrency())
+                .sendAmount(request.getSendAmount())
+                .startDate(request.getStartDate())
+                .build();
+
+        // 6. Command 실행 위임: 생성된 Command를 통해 실제 송금 로직 실행
         return remittanceProcessorService.execute(command);
     }
 }

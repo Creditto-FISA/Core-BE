@@ -3,27 +3,31 @@ package org.creditto.core_banking.domain.overseasremittance.service;
 import lombok.RequiredArgsConstructor;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
+import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
+import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
 import org.creditto.core_banking.domain.exchange.entity.Exchange;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
+import org.creditto.core_banking.domain.exchange.service.ExchangeService;
 import org.creditto.core_banking.domain.overseasremittance.dto.ExecuteRemittanceCommand;
 import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceResponseDto;
 import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemittance;
-import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
 import org.creditto.core_banking.domain.overseasremittance.repository.OverseasRemittanceRepository;
-import org.creditto.core_banking.domain.regularremittance.repository.RegularRemittanceRepository;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
+import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
+import org.creditto.core_banking.domain.regularremittance.repository.RegularRemittanceRepository;
+import org.creditto.core_banking.domain.remittancefee.dto.RemittanceFeeReq;
 import org.creditto.core_banking.domain.remittancefee.entity.FeeRecord;
-import org.creditto.core_banking.domain.remittancefee.repository.RemittanceFeeRepository;
-import org.creditto.core_banking.domain.transaction.entity.Transaction;
+import org.creditto.core_banking.domain.remittancefee.service.RemittanceFeeService;
+import org.creditto.core_banking.domain.transaction.entity.TxnResult;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
-import org.creditto.core_banking.domain.transaction.repository.TransactionRepository;
+import org.creditto.core_banking.domain.transaction.service.TransactionService;
+import org.creditto.core_banking.global.response.error.ErrorBaseCode;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -38,11 +42,12 @@ public class RemittanceProcessorService {
 
     private final OverseasRemittanceRepository remittanceRepository;
     private final AccountRepository accountRepository;
-    private final RemittanceFeeRepository remittanceFeeRepository;
     private final RecipientRepository recipientRepository;
-    private final TransactionRepository transactionRepository;
     private final RegularRemittanceRepository regularRemittanceRepository;
     private final ExchangeRepository exchangeRepository;
+    private final ExchangeService exchangeService;
+    private final TransactionService transactionService;
+    private final RemittanceFeeService remittanceFeeService;
 
     /**
      * 전달된 Command를 기반으로 해외송금의 모든 단계를 실행합니다.
@@ -65,87 +70,71 @@ public class RemittanceProcessorService {
         Recipient recipient = recipientRepository.findById(command.getRecipientId())
                 .orElseThrow(() -> new IllegalArgumentException("수취인을 찾을 수 없습니다."));
 
-        // TODO: 수수료 정보가 ExecuteRemittanceCommand에 제대로 전달되지 않아 임시로 주석 처리.
-        // FeeRecord fee = remittanceFeeRepository.findById(command.getFeeId())
-        //         .orElseThrow(() -> new IllegalArgumentException("수수료 정보를 찾을 수 없습니다."));
-        FeeRecord fee = null; // 임시로 null 처리
-
         // 정기 송금 정보 조회 (regRemId가 있을 경우)
         RegularRemittance regularRemittance = Optional.ofNullable(command.getRegRemId())
                 .map(id -> regularRemittanceRepository.findById(id)
                         .orElseThrow(() -> new IllegalArgumentException("정기송금 정보를 찾을 수 없습니다.")))
                 .orElse(null);
 
-        // 금액 및 수수료 계산 (수수료는 임시로 0으로 가정)
+        // 1. ExchangeService를 통해 환전 처리 및 결과(DTO) 수신
+        ExchangeReq exchangeReq = new ExchangeReq(command.getSendCurrency(), command.getReceiveCurrency(), command.getSendAmount());
+        ExchangeRes exchangeRes = exchangeService.exchange(exchangeReq);
+
+        // 2. 수수료 계산을 위해 RemittanceFeeService 호출
+        RemittanceFeeReq feeReq = new RemittanceFeeReq(
+            exchangeRes.exchangeRate(), // command.getExchangeRate() 대신 exchangeRes에서 가져옴
+            command.getSendAmount(),
+            command.getReceiveCurrency(),
+            exchangeRes.fromAmountInUSD() // 환전 결과에서 USD 환율 가져오기
+        );
+
+        FeeRecord feeRecord = remittanceFeeService.calculateAndSaveFee(feeReq);
+        BigDecimal totalFee = feeRecord.getTotalFee();
+
+        // 금액 및 수수료 계산
         BigDecimal sendAmount = command.getSendAmount();
-        BigDecimal totalFee = BigDecimal.ZERO; // TODO: 실제 수수료 계산 로직으로 대체 필요
-        // if (fee != null) {
-        //     totalFee = fee.getBaseFee().add(fee.getVariableFee());
-        // }
         BigDecimal totalDeduction = sendAmount.add(totalFee);
 
         // 잔액 확인
         if (account.getBalance().compareTo(totalDeduction) < 0) {
-            // TODO: InsufficientBalanceException으로 변경 및 GlobalExceptionHandler에서 처리
-            throw new IllegalArgumentException("잔액이 부족합니다.");
+            // 실패 트랜잭션 기록
+            transactionService.saveTransaction(account, sendAmount, TxnType.WITHDRAWAL, null, TxnResult.FAILURE);
+            throw new CustomBaseException(ErrorBaseCode.INSUFFICIENT_FUNDS);
         }
 
-        // 수취 금액 계산
-        BigDecimal receiveAmount = sendAmount.divide(command.getExchangeRate(), 2, RoundingMode.HALF_UP); // TODO: 정확한 계산 로직 확인 필요
+        // 3. DTO에 담겨올 ID로 Exchange 엔티티 다시 조회
+         Long exchangeId = exchangeRes.exchangeId();
+         Exchange savedExchange = exchangeRepository.findById(exchangeId)
+                 .orElseThrow(() -> new IllegalArgumentException("환전 내역을 찾을 수 없습니다."));
 
-        // Exchange 엔티티 생성 및 저장
-        Exchange exchange = Exchange.builder()
-                .account(account)
-                .fromCurrency(command.getSendCurrency())
-                .toCurrency(command.getCurrencyCode())
-                .country(recipient.getCountry()) // 수취인 국가 사용
-                .fromAmount(sendAmount)
-                .toAmount(receiveAmount)
-                .exchangeRate(command.getExchangeRate())
-                .build();
-        Exchange savedExchange = exchangeRepository.save(exchange);
+        // 4. 최종 수취 금액은 exchangeRes에서 가져옴
+        BigDecimal receiveAmount = exchangeRes.exchangeAmount();
 
-
-        // 송금 이력 생성
+        // 5. 송금 이력 생성
         OverseasRemittance overseasRemittance = OverseasRemittance.of(
                 recipient,
                 account,
                 regularRemittance,
-                savedExchange, // 생성된 Exchange 엔티티 전달
-                fee, // TODO: 실제 FeeRecord 엔티티 전달
+                savedExchange,
+                feeRecord,
                 command.getClientId(),
                 command.getSendCurrency(),
-                command.getCurrencyCode(), // receiveCurrency
+                command.getReceiveCurrency(), // receiveCurrency
                 sendAmount,
                 receiveAmount,
                 command.getStartDate()
         );
         remittanceRepository.save(overseasRemittance);
 
-        // 수수료 차감 및 거래 내역 생성 (수수료가 0이므로 현재는 동작하지 않음)
+        // 수수료 차감 및 거래 내역 생성
         if (totalFee.compareTo(BigDecimal.ZERO) > 0) {
             account.withdraw(totalFee);
-            Transaction feeTransaction = Transaction.of(
-                    account,
-                    totalFee,
-                    TxnType.FEE,
-                    account.getBalance(),
-                    LocalDateTime.now()
-            );
-            transactionRepository.save(feeTransaction);
+            transactionService.saveTransaction(account, totalFee, TxnType.FEE, overseasRemittance.getRemittanceId(), TxnResult.SUCCESS);
         }
-
 
         // 송금액 차감 및 거래 내역 생성
         account.withdraw(sendAmount);
-        Transaction withdrawalTransaction = Transaction.of(
-                account,
-                sendAmount,
-                TxnType.WITHDRAWAL,
-                account.getBalance(),
-                LocalDateTime.now()
-        );
-        transactionRepository.save(withdrawalTransaction);
+        transactionService.saveTransaction(account, sendAmount, TxnType.WITHDRAWAL, overseasRemittance.getRemittanceId(), TxnResult.SUCCESS);
 
         accountRepository.save(account);
 
