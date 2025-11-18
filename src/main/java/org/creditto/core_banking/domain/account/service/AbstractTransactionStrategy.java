@@ -17,7 +17,7 @@ public abstract class AbstractTransactionStrategy implements TransactionStrategy
     protected final TransactionService transactionService;
 
     @Transactional
-    public final void execute(Account account, BigDecimal amount, Long typeId) {
+    public void execute(Account account, BigDecimal amount, Long typeId) {
         try {
             // 실제 비즈니스 로직 처리
             process(account, amount, typeId);
