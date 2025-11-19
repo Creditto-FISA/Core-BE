@@ -12,7 +12,7 @@ public record AccountRes(
     BigDecimal balance,
     AccountType accountType,
     AccountState accountState,
-    String clientId
+    String externalUserId
 ) {
     public static AccountRes from(Account account) {
         return new AccountRes(

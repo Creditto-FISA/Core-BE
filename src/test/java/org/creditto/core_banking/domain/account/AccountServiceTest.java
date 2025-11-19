@@ -78,7 +78,7 @@ class AccountServiceTest {
         assertThat(result.accountName()).isEqualTo(request.accountName());
         assertThat(result.accountType()).isEqualTo(request.accountType());
         assertThat(result.accountState()).isEqualTo(AccountState.ACTIVE);
-        assertThat(result.clientId()).isEqualTo(externalUserId);
+        assertThat(result.externalUserId()).isEqualTo(externalUserId);
 
     }
 
@@ -161,7 +161,7 @@ class AccountServiceTest {
 
     @Test
     @DisplayName("클라이언트 ID로 계좌 조회 성공")
-    void getAccountByClientId_Success() {
+    void getAccountByExternalUserId_Success() {
         // given
         String clientId = "CLIENT001";
         
@@ -188,7 +188,7 @@ class AccountServiceTest {
                 .willReturn(List.of(account1, account2));
         
         // when
-        List<AccountRes> result = accountService.getAccountByClientId(clientId);
+        List<AccountRes> result = accountService.getAccountByExternalUserId(clientId);
 
         // then
         assertThat(result.size()).isEqualTo(2);

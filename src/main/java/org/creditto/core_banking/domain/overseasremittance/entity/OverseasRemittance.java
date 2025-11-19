@@ -67,7 +67,7 @@ public class OverseasRemittance extends BaseEntity {
     /**
      * 송금을 요청한 고객의 ID
      */
-    private String clientId;
+    private String externalUserId;
 
     /**
      * 송금 통화
@@ -130,7 +130,7 @@ public class OverseasRemittance extends BaseEntity {
                 .recur(recur)
                 .exchange(exchange)
                 .feeRecord(feeRecord)
-                .clientId(command.clientId())
+                .externalUserId(command.externalUserId())
                 .sendCurrency(command.sendCurrency())
                 .receiveCurrency(command.receiveCurrency())
                 .sendAmount(sendAmount)
