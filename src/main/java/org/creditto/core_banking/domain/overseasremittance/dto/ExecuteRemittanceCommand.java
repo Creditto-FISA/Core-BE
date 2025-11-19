@@ -1,4 +1,5 @@
 package org.creditto.core_banking.domain.overseasremittance.dto;
+import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
 import org.creditto.core_banking.global.common.CurrencyCode;
 import org.springframework.lang.Nullable;
 
@@ -55,6 +56,19 @@ public record ExecuteRemittanceCommand(
                 receiveCurrency,
                 targetAmount,
                 startDate
+        );
+    }
+
+    public static ExecuteRemittanceCommand of(RegularRemittance regularRemittance) {
+        return new ExecuteRemittanceCommand(
+                regularRemittance.getAccount().getExternalUserId(),
+                regularRemittance.getRecipient().getRecipientId(),
+                regularRemittance.getAccount().getId(),
+                regularRemittance.getRegRemId(),
+                regularRemittance.getSendCurrency(),
+                regularRemittance.getReceivedCurrency(),
+                regularRemittance.getSendAmount(),
+                LocalDate.now()
         );
     }
 }

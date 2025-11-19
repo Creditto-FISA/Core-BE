@@ -16,5 +16,10 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
 
+scheduler:
+  remittance:
+    monthly-cron: "0 0 1 * * *"
+    weekly-cron: "0 0 3 * * *"
+
 exchange:
   auth-key: ${EX_API_KEY}
