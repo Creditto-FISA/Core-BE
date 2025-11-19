@@ -1,4 +1,4 @@
-package org.creditto.core_banking.domain.account.service;
+package org.creditto.core_banking.domain.account.service.strategy;
 
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;

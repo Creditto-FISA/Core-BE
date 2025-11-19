@@ -1,4 +1,4 @@
-package org.creditto.core_banking.domain.account.service;
+package org.creditto.core_banking.domain.account.service.strategy;
 
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
