@@ -188,7 +188,7 @@ class AccountServiceTest {
                 .willReturn(List.of(account1, account2));
         
         // when
-        List<AccountRes> result = accountService.getAccountByExternalUserId(clientId);
+        List<AccountRes> result = accountService.getAccountByExternalId(clientId);
 
         // then
         assertThat(result.size()).isEqualTo(2);
