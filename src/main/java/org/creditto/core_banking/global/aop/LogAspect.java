@@ -1,5 +1,6 @@
 package org.creditto.core_banking.global.aop;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class LogAspect {
     private void onService() {}
 
     @Around("onRequest()")
-    public Object test(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object logRequestAndResponse(ProceedingJoinPoint joinPoint) throws Throwable {
         HttpServletRequest request =
                 ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
@@ -55,7 +56,7 @@ public class LogAspect {
         String argsAsString;
         try {
             argsAsString = objectMapper.writeValueAsString(args);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             argsAsString = Arrays.toString(args);
         }
 
@@ -89,7 +90,7 @@ public class LogAspect {
         String dataAsString;
         try {
             dataAsString = objectMapper.writeValueAsString(dataForLog);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             dataAsString = String.valueOf(dataForLog);
         }
 
