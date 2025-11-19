@@ -1,4 +1,4 @@
-package org.creditto.core_banking.domain.account.service;
+package org.creditto.core_banking.domain.account.service.strategy;
 
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 @Component
-public class ExchangeStrategy extends AbstractTransactionStrategy {
+public class WithdrawalStrategy extends AbstractTransactionStrategy {
 
-    public ExchangeStrategy(TransactionService transactionService) {
+    public WithdrawalStrategy(TransactionService transactionService) {
         super(transactionService);
     }
 
@@ -21,6 +21,6 @@ public class ExchangeStrategy extends AbstractTransactionStrategy {
 
     @Override
     public TxnType getTxnType() {
-        return TxnType.EXCHANGE;
+        return TxnType.WITHDRAWAL;
     }
 }

@@ -1,4 +1,4 @@
-package org.creditto.core_banking.domain.account.service;
+package org.creditto.core_banking.domain.account.service.strategy;
 
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
@@ -8,19 +8,19 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 @Component
-public class DepositStrategy extends AbstractTransactionStrategy {
+public class FeeStrategy extends AbstractTransactionStrategy {
 
-    public DepositStrategy(TransactionService transactionService) {
+    public FeeStrategy(TransactionService transactionService) {
         super(transactionService);
     }
 
     @Override
     protected void process(Account account, BigDecimal amount, Long typeId) {
-        account.deposit(amount);
+        account.withdraw(amount);
     }
 
     @Override
     public TxnType getTxnType() {
-        return TxnType.DEPOSIT;
+        return TxnType.FEE;
     }
 }

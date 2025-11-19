@@ -14,16 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.web.bind.annotation.*;
-
-import org.springframework.web.bind.annotation.*;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/core/account")
@@ -47,8 +37,8 @@ public class AccountController {
         return ApiResponseUtil.success(SuccessCode.OK, accountService.getAccountByAccountNo(accountNo));
     }
 
-    @GetMapping("client/{clientId}")
-    public ResponseEntity<BaseResponse<?>> getAccountByClientId(@PathVariable String clientId) {
-        return ApiResponseUtil.success(SuccessCode.OK, accountService.getAccountByClientId(clientId));
+    @GetMapping("client/{externalUserId}")
+    public ResponseEntity<BaseResponse<?>> getAccountByClientId(@PathVariable String externalUserId) {
+        return ApiResponseUtil.success(SuccessCode.OK, accountService.getAccountByExternalId(externalUserId));
     }
 }

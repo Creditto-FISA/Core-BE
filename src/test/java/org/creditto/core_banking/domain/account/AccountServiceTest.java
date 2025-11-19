@@ -7,8 +7,8 @@ import org.creditto.core_banking.domain.account.entity.AccountState;
 import org.creditto.core_banking.domain.account.entity.AccountType;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.account.service.AccountService;
-import org.creditto.core_banking.domain.account.service.TransactionStrategy;
-import org.creditto.core_banking.domain.account.service.TransactionStrategyFactory;
+import org.creditto.core_banking.domain.account.service.strategy.TransactionStrategy;
+import org.creditto.core_banking.domain.account.service.strategy.TransactionStrategyFactory;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.creditto.core_banking.global.response.exception.CustomBaseException;
@@ -78,7 +78,7 @@ class AccountServiceTest {
         assertThat(result.accountName()).isEqualTo(request.accountName());
         assertThat(result.accountType()).isEqualTo(request.accountType());
         assertThat(result.accountState()).isEqualTo(AccountState.ACTIVE);
-        assertThat(result.clientId()).isEqualTo(externalUserId);
+        assertThat(result.externalUserId()).isEqualTo(externalUserId);
 
     }
 
@@ -161,7 +161,7 @@ class AccountServiceTest {
 
     @Test
     @DisplayName("클라이언트 ID로 계좌 조회 성공")
-    void getAccountByClientId_Success() {
+    void getAccountByExternalUserId_Success() {
         // given
         String clientId = "CLIENT001";
         
@@ -184,11 +184,11 @@ class AccountServiceTest {
         );
 
         
-        given(accountRepository.findByClientId(clientId))
+        given(accountRepository.findAccountByExternalUserId(clientId))
                 .willReturn(List.of(account1, account2));
         
         // when
-        List<AccountRes> result = accountService.getAccountByClientId(clientId);
+        List<AccountRes> result = accountService.getAccountByExternalId(clientId);
 
         // then
         assertThat(result.size()).isEqualTo(2);
