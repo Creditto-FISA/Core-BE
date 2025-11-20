@@ -10,6 +10,7 @@ import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittan
 import org.creditto.core_banking.domain.regularremittance.entity.WeeklyRegularRemittance;
 import org.creditto.core_banking.domain.regularremittance.repository.MonthlyRegularRemittanceRepository;
 import org.creditto.core_banking.domain.regularremittance.repository.WeeklyRegularRemittanceRepository;
+import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -135,7 +136,7 @@ public class RegularRemittanceScheduler {
                 if (remittance.getRegRemStatus().equals(RegRemStatus.DELAYED)) {
                     remittance.updateRegRemStatus(RegRemStatus.ACTIVE);
                 }
-            } catch (Exception e) {
+            } catch (CustomBaseException e) {
                 log.error("[RegularRemittanceScheduler] 정기 송금 실행에 실패하였습니다. remittanceId={}, error={}", remittance.getRegRemId(), e.getMessage());
                 remittance.updateRegRemStatus(RegRemStatus.DELAYED);
             }
