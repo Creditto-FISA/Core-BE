@@ -56,28 +56,31 @@ public class RegularRemittanceScheduler {
 
         Page<MonthlyRegularRemittance> slice;
 
+        // 정기 송금일이 주말일 경우 RegRem Status를 DELAYED로 업데이트
+        if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            int updatedCount = monthlyRegularRemittanceRepository.bulkUpdateRegRemStatusByScheduledDates(
+                    scheduledDates,
+                    RegRemStatus.ACTIVE,
+                    RegRemStatus.DELAYED
+            );
+            total += updatedCount;
+            log.info("[RegularRemittanceScheduler {}/{}/{}] 월간 정기 해외송금 Job : 주말로 인한 송금 지연, 지연된 정기 송금 수 = {}",
+                    now.getYear(), now.getMonthValue(), now.getDayOfMonth(), total
+            );
+            return;
+        }
+
         do {
-            if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                // 정기 송금일이 주말일 경우 RegRem Status를 DELAYED로 업데이트
-                slice = monthlyRegularRemittanceRepository
-                        .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatus(
-                                scheduledDates,
-                                RegRemStatus.ACTIVE,
-                                PageRequest.of(page, SIZE)
-                        );
 
-                slice.forEach(rem -> rem.updateRegRemStatus(RegRemStatus.DELAYED));
-            } else {
-                // 평일의 경우 DELAYED & ACTIVE 정기송금을 실행되게 함
-                slice = monthlyRegularRemittanceRepository
-                        .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
-                                scheduledDates,
-                                List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED),
-                                PageRequest.of(page, SIZE)
-                        );
+            // 평일의 경우 DELAYED & ACTIVE 정기송금을 실행되게 함
+            slice = monthlyRegularRemittanceRepository
+                    .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
+                            scheduledDates,
+                            List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED),
+                            PageRequest.of(page, SIZE)
+                    );
 
-                executeRemittanceForRegRemList(slice.getContent());
-            }
+            executeRemittanceForRegRemList(slice.getContent());
 
             total += slice.getNumberOfElements();
             page++;
