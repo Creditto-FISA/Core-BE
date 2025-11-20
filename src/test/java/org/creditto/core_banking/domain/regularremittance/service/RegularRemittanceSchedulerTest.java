@@ -2,7 +2,6 @@ package org.creditto.core_banking.domain.regularremittance.service;
 
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.overseasremittance.dto.ExecuteRemittanceCommand;
-import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceRequestDto;
 import org.creditto.core_banking.domain.overseasremittance.service.RemittanceProcessorService;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.regularremittance.entity.MonthlyRegularRemittance;
@@ -26,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
+import java.lang.reflect.Constructor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.creditto.core_banking.domain.account.entity.AccountState.ACTIVE;
 import static org.creditto.core_banking.domain.account.entity.AccountType.DEPOSIT;
@@ -66,16 +68,7 @@ class RegularRemittanceSchedulerTest {
         String clientId = "testClient";
         account = Account.of("1002-123-456789", "예금계좌", BigDecimal.valueOf(1_000_000), DEPOSIT, ACTIVE, clientId);
 
-        OverseasRemittanceRequestDto.RecipientInfo info = OverseasRemittanceRequestDto.RecipientInfo.builder()
-                .name("John Doe")
-                .accountNumber("1234567890")
-                .bankName("Test Bank")
-                .bankCode("CHASUS33XXX")
-                .phoneCc("+1")
-                .phoneNo("310-555-1234")
-                .country("USA")
-                .build();
-        recipient = Recipient.of(info, CurrencyCode.USD);
+        recipient = createRecipient();
     }
 
     @Test
@@ -277,5 +270,26 @@ class RegularRemittanceSchedulerTest {
                 BigDecimal.valueOf(3000),
                 scheduledDay
         );
+    }
+
+    private Recipient createRecipient() {
+        try {
+            Constructor<Recipient> constructor = Recipient.class.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            Recipient recipient = constructor.newInstance();
+
+            ReflectionTestUtils.setField(recipient, "name", "John Doe");
+            ReflectionTestUtils.setField(recipient, "phoneNo", "310-555-1234");
+            ReflectionTestUtils.setField(recipient, "phoneCc", "+1");
+            ReflectionTestUtils.setField(recipient, "bankName", "Test Bank");
+            ReflectionTestUtils.setField(recipient, "bankCode", "CHASUS33XXX");
+            ReflectionTestUtils.setField(recipient, "accountNo", "1234567890");
+            ReflectionTestUtils.setField(recipient, "country", "USA");
+            ReflectionTestUtils.setField(recipient, "currencyCode", CurrencyCode.USD);
+
+            return recipient;
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to create Recipient for tests", e);
+        }
     }
 }
