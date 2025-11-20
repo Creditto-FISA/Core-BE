@@ -9,11 +9,8 @@ import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.global.common.CurrencyCode;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -22,17 +19,15 @@ import java.time.LocalDateTime;
 @DiscriminatorColumn(name = "regrem_type")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 public abstract class RegularRemittance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long regRemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private Account account;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_id")
+    @OneToOne
     private Recipient recipient;
 
     @Enumerated(EnumType.STRING)
@@ -45,20 +40,6 @@ public abstract class RegularRemittance {
 
     @Enumerated(EnumType.STRING)
     private RegRemStatus regRemStatus;
-
-    // 엔티티 생성 시각 자동 저장
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME(6)")
-    private LocalDateTime createdAt;
-
-    // 엔티티 수정 시각 자동 저장
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
-    private LocalDateTime updatedAt;
-
-    public void updateRegRemStatus(RegRemStatus regRemStatus) {
-        this.regRemStatus = regRemStatus;
-    }
 
     public void updateDetails(
             Account account,
