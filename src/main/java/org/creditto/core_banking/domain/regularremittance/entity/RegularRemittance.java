@@ -51,4 +51,8 @@ public abstract class RegularRemittance {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
     private LocalDateTime updatedAt;
+
+    public void updateRegRemStatus(RegRemStatus regRemStatus) {
+        this.regRemStatus = regRemStatus;
+    }
 }

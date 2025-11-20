@@ -19,7 +19,7 @@ spring:
 scheduler:
   remittance:
     monthly-cron: "0 0 1 * * *"
-    weekly-cron: "0 0 3 * * *"
+    weekly-cron: "0 0 3 * * MON-FRI"
 
 exchange:
   auth-key: ${EX_API_KEY}

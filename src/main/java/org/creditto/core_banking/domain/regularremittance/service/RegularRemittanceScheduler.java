@@ -19,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -35,10 +36,18 @@ public class RegularRemittanceScheduler {
     @Scheduled(cron = "${scheduler.remittance.monthly-cron}")
     public void executeMonthlyRegularRemittance() {
         LocalDate now = LocalDate.now(ZONE_ID);
-        log.info("[RegularRemittanceScheduler {}년 {}월 {}일] 월간 정기 해외송금 Job Start",
-                now.getYear(), now.getMonth(), now.getDayOfMonth()
-        );
         int nowDayOfMonth = now.getDayOfMonth();
+
+        log.info("[RegularRemittanceScheduler {}/{}/{}] 월간 정기 해외송금 Job Start",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth()
+        );
+
+        // 월말이 31일 아닌 경우, 이후에 예약된 정기 송금들에 대해서도 처리
+        List<Integer> scheduledDates = (nowDayOfMonth == now.lengthOfMonth() && nowDayOfMonth < 31)
+                ? IntStream.rangeClosed(nowDayOfMonth, 31)
+                    .boxed()
+                    .toList()
+                : List.of(nowDayOfMonth);
 
         int page = 0;
         long total = 0L;
@@ -46,21 +55,34 @@ public class RegularRemittanceScheduler {
         Page<MonthlyRegularRemittance> slice;
 
         do {
-            slice = monthlyRegularRemittanceRepository
-                    .findMonthlyRegularRemittanceByScheduledDateAndRegRemStatus(
-                            nowDayOfMonth,
-                            RegRemStatus.ACTIVE,
-                            PageRequest.of(page, SIZE)
-                    );
+            if (now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                // 정기 송금일이 주말일 경우 RegRem Status를 DELAYED로 업데이트
+                slice = monthlyRegularRemittanceRepository
+                        .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatus(
+                                scheduledDates,
+                                RegRemStatus.ACTIVE,
+                                PageRequest.of(page, SIZE)
+                        );
 
-            executeRemittanceForRegRemList(slice.getContent());
+                slice.forEach(rem -> rem.updateRegRemStatus(RegRemStatus.DELAYED));
+            } else {
+                // 평일의 경우 DELAYED & ACTIVE 정기송금을 실행되게 함
+                slice = monthlyRegularRemittanceRepository
+                        .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
+                                scheduledDates,
+                                List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED),
+                                PageRequest.of(page, SIZE)
+                        );
+
+                executeRemittanceForRegRemList(slice.getContent());
+            }
 
             total += slice.getNumberOfElements();
             page++;
         } while (slice.hasNext());
 
-        log.info("[RegularRemittanceScheduler {}년 {}월 {}일] 월간 정기 해외송금 Job : 수행한 송금 수 = {}",
-                now.getYear(), now.getMonth(), now.getDayOfMonth(), total
+        log.info("[RegularRemittanceScheduler {}/{}/{}] 월간 정기 해외송금 Job : 수행한 송금 수 = {}",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth(), total
         );
     }
 
@@ -68,8 +90,9 @@ public class RegularRemittanceScheduler {
     public void executeWeeklyRegularRemittance() {
         LocalDate now = LocalDate.now(ZONE_ID);
         DayOfWeek dayOfWeek = now.getDayOfWeek();
-        log.info("[RegularRemittanceScheduler {}년 {}월 {}일] 주간 정기 해외송금 Job Start",
-                now.getYear(), now.getMonth(), now.getDayOfMonth()
+
+        log.info("[RegularRemittanceScheduler {}/{}/{}] 주간 정기 해외송금 Job Start",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth()
         );
 
         int page = 0;
@@ -91,8 +114,8 @@ public class RegularRemittanceScheduler {
             page++;
         } while (slice.hasNext());
 
-        log.info("[RegularRemittanceScheduler {}년 {}월 {}일] 주간 정기 해외송금 Job : 수행한 송금 수 = {}",
-                now.getYear(), now.getMonth(), now.getDayOfMonth(), total
+        log.info("[RegularRemittanceScheduler {}/{}/{}] 주간 정기 해외송금 Job : 수행한 송금 수 = {}",
+                now.getYear(), now.getMonthValue(), now.getDayOfMonth(), total
         );
     }
 
@@ -100,6 +123,10 @@ public class RegularRemittanceScheduler {
         remittances.forEach(remittance -> {
             ExecuteRemittanceCommand remittanceCommand = ExecuteRemittanceCommand.of(remittance);
             remittanceProcessorService.execute(remittanceCommand);
+            // 연기된 작업 수행 후 ACTIVE로 수정
+            if (remittance.getRegRemStatus().equals(RegRemStatus.DELAYED)) {
+                remittance.updateRegRemStatus(RegRemStatus.ACTIVE);
+            }
         });
     }
 }
