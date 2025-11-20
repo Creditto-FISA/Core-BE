@@ -5,12 +5,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Size;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.creditto.core_banking.domain.recipient.dto.RecipientCreateDto;
 import org.creditto.core_banking.global.common.BaseEntity;
 import org.creditto.core_banking.global.common.CurrencyCode;
 
 @Entity
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"bankCode", "accountNo", "name"})
+})
 @Getter
 @Builder(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
