@@ -32,6 +32,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import org.springframework.test.util.ReflectionTestUtils;
@@ -92,7 +93,7 @@ class RegularRemittanceSchedulerTest {
 
             given(monthlyRegularRemittanceRepository.findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
                     eq(List.of(scheduledDate)),
-                    eq(List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
+                    eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                     any(PageRequest.class)
             )).willReturn(page0, page1);
 
@@ -102,7 +103,7 @@ class RegularRemittanceSchedulerTest {
         verify(monthlyRegularRemittanceRepository, times(2))
                 .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
                         eq(List.of(scheduledDate)),
-                        eq(List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
+                        eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                         any(PageRequest.class)
                 );
         verify(remittanceProcessorService, times(3)).execute(any(ExecuteRemittanceCommand.class));
@@ -120,15 +121,15 @@ class RegularRemittanceSchedulerTest {
 
             given(monthlyRegularRemittanceRepository.bulkUpdateRegRemStatusByScheduledDates(
                     eq(List.of(scheduledDate)),
-                    eq(RegRemStatus.ACTIVE),
-                    eq(RegRemStatus.DELAYED)
+                    eq(RegRemStatus.DELAYED),
+                    eq(RegRemStatus.ACTIVE)
             )).willReturn(2);
 
             scheduler.executeMonthlyRegularRemittance();
         }
 
         verify(monthlyRegularRemittanceRepository)
-                .bulkUpdateRegRemStatusByScheduledDates(eq(List.of(scheduledDate)), eq(RegRemStatus.ACTIVE), eq(RegRemStatus.DELAYED));
+                .bulkUpdateRegRemStatusByScheduledDates(eq(List.of(scheduledDate)), eq(RegRemStatus.DELAYED), eq(RegRemStatus.ACTIVE));
         verify(remittanceProcessorService, never()).execute(any(ExecuteRemittanceCommand.class));
     }
 
@@ -144,7 +145,7 @@ class RegularRemittanceSchedulerTest {
 
             given(monthlyRegularRemittanceRepository.findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
                     anyCollection(),
-                    eq(List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
+                    eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                     any(PageRequest.class)
             )).willReturn(emptyPage);
 
@@ -155,7 +156,7 @@ class RegularRemittanceSchedulerTest {
         verify(monthlyRegularRemittanceRepository)
                 .findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
                         scheduledCaptor.capture(),
-                        eq(List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
+                        eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                         any(PageRequest.class)
                 );
 
@@ -180,7 +181,7 @@ class RegularRemittanceSchedulerTest {
 
             given(monthlyRegularRemittanceRepository.findMonthlyRegularRemittanceByScheduledDateInAndRegRemStatusIn(
                     eq(List.of(scheduledDate)),
-                    eq(List.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
+                    eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                     any(PageRequest.class)
             )).willReturn(page);
 
@@ -209,9 +210,9 @@ class RegularRemittanceSchedulerTest {
         try (MockedStatic<LocalDate> mockedLocalDate = Mockito.mockStatic(LocalDate.class)) {
             mockedLocalDate.when(() -> LocalDate.now(ZONE_ID)).thenReturn(fixedDate);
 
-            given(weeklyRegularRemittanceRepository.findWeeklyRegularRemittanceByScheduledDayAndRegRemStatus(
+            given(weeklyRegularRemittanceRepository.findWeeklyRegularRemittanceByScheduledDayAndRegRemStatusIn(
                     eq(scheduledDay),
-                    eq(RegRemStatus.ACTIVE),
+                    eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                     any(PageRequest.class)
             )).willReturn(page0, page1);
 
@@ -236,9 +237,9 @@ class RegularRemittanceSchedulerTest {
         try (MockedStatic<LocalDate> mockedLocalDate = Mockito.mockStatic(LocalDate.class)) {
             mockedLocalDate.when(() -> LocalDate.now(ZONE_ID)).thenReturn(fixedDate);
 
-            given(weeklyRegularRemittanceRepository.findWeeklyRegularRemittanceByScheduledDayAndRegRemStatus(
+            given(weeklyRegularRemittanceRepository.findWeeklyRegularRemittanceByScheduledDayAndRegRemStatusIn(
                     eq(scheduledDay),
-                    eq(RegRemStatus.ACTIVE),
+                    eq(Set.of(RegRemStatus.ACTIVE, RegRemStatus.DELAYED)),
                     any(PageRequest.class)
             )).willReturn(page);
 
