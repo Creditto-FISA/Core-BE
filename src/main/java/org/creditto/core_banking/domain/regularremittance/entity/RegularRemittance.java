@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
+import org.creditto.core_banking.global.common.CurrencyCode;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -26,15 +27,15 @@ public abstract class RegularRemittance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long regRemId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private Recipient recipient;
 
-    private String sendCurrency;
+    private CurrencyCode sendCurrency;
 
-    private String receivedCurrency;
+    private CurrencyCode receivedCurrency;
 
     private BigDecimal sendAmount;
 
@@ -50,4 +51,8 @@ public abstract class RegularRemittance {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
     private LocalDateTime updatedAt;
+
+    public void updateRegRemStatus(RegRemStatus regRemStatus) {
+        this.regRemStatus = regRemStatus;
+    }
 }

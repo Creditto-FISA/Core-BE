@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
+import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
 
@@ -24,8 +25,8 @@ public class MonthlyRegularRemittance extends RegularRemittance{
     public static MonthlyRegularRemittance of(
             Account account,
             Recipient recipient,
-            String sendCurrency,
-            String receivedCurrency,
+            CurrencyCode sendCurrency,
+            CurrencyCode receivedCurrency,
             BigDecimal sendAmount,
             Integer scheduledDate
     ) {

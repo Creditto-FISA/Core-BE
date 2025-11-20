@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
+import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 
 @Entity
 @Getter
@@ -23,15 +25,15 @@ import java.math.BigDecimal;
 public class WeeklyRegularRemittance extends RegularRemittance{
 
     @Enumerated(EnumType.STRING)
-    private ScheduledDay scheduledDay;
+    private DayOfWeek scheduledDay;
 
     public static WeeklyRegularRemittance of(
             Account account,
             Recipient recipient,
-            String sendCurrency,
-            String receivedCurrency,
+            CurrencyCode sendCurrency,
+            CurrencyCode receivedCurrency,
             BigDecimal sendAmount,
-            ScheduledDay scheduledDay
+            DayOfWeek scheduledDay
     ) {
         return WeeklyRegularRemittance.builder()
                 .account(account)

@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum RegRemStatus {
     ACTIVE("정상"),
+    DELAYED("연기"),
     PAUSED("일시중지"),
     CANCELLED("취소");
 

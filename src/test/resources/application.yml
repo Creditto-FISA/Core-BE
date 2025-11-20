@@ -16,4 +16,9 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
 
 exchange:
-    auth-key: ${EX_API_KEY}
+  auth-key: ${EX_API_KEY}
+
+scheduler:
+  remittance:
+    monthly-cron: "0 0 1 * * *"
+    weekly-cron: "0 0 3 * * MON-FRI"
