@@ -1,9 +1,11 @@
 package org.creditto.core_banking.domain.overseasremittance.dto;
+import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
 import org.creditto.core_banking.global.common.CurrencyCode;
 import org.springframework.lang.Nullable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 /**
  * 서비스 계층 내부에서 해외송금 실행에 필요한 모든 데이터를 전달하는 불변 Command 객체입니다.
@@ -55,6 +57,19 @@ public record ExecuteRemittanceCommand(
                 receiveCurrency,
                 targetAmount,
                 startDate
+        );
+    }
+
+    public static ExecuteRemittanceCommand of(RegularRemittance regularRemittance) {
+        return new ExecuteRemittanceCommand(
+                regularRemittance.getAccount().getExternalUserId(),
+                regularRemittance.getRecipient().getRecipientId(),
+                regularRemittance.getAccount().getId(),
+                regularRemittance.getRegRemId(),
+                regularRemittance.getSendCurrency(),
+                regularRemittance.getReceivedCurrency(),
+                regularRemittance.getSendAmount(),
+                LocalDate.now(ZoneId.of("Asia/Seoul"))
         );
     }
 }
