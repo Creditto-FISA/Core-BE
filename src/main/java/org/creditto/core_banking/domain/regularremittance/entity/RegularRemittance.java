@@ -29,10 +29,11 @@ public abstract class RegularRemittance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long regRemId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_id")
     private Recipient recipient;
 
     @Enumerated(EnumType.STRING)
