@@ -53,24 +53,4 @@ public abstract class RegularRemittance {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
     private LocalDateTime updatedAt;
-
-    public void updateRegRemStatus(RegRemStatus regRemStatus) {
-        this.regRemStatus = regRemStatus;
-    }
-
-    public void updateDetails(
-            Account account,
-            Recipient recipient,
-            CurrencyCode sendCurrency,
-            CurrencyCode receivedCurrency,
-            BigDecimal sendAmount,
-            RegRemStatus regRemStatus
-    ) {
-        this.account = account;
-        this.recipient = recipient;
-        this.sendCurrency = sendCurrency;
-        this.receivedCurrency = receivedCurrency;
-        this.sendAmount = sendAmount;
-        this.regRemStatus = regRemStatus;
-    }
 }
