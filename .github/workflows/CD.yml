@@ -120,4 +120,5 @@ jobs:
         run: |
           rm .env
           rm -rf build
+          docker image prune -a
         shell: bash
