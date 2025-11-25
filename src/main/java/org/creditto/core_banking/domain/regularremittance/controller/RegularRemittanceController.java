@@ -41,11 +41,11 @@ public class RegularRemittanceController {
         return ApiResponseUtil.success(SuccessCode.OK, regularRemittanceService.getRegularRemittanceDetail(userId, remittanceId));
     }
 
-    // 정기 해외 송금 설정 신규 등록
-    @PostMapping("/schedule")
+    // Task 4: 정기송금 신규 등록
+    @PostMapping("/schedule/add")
     public ResponseEntity<BaseResponse<RegularRemittanceResponseDto>> createScheduledRemittance(
-            @RequestParam("userId") String userId,
-            @RequestBody RegularRemittanceCreateReqDto dto
+            @RequestParam("userId") Long userId,
+            @RequestBody RegularRemittanceCreateDto dto
     ) {
 //        regularRemittanceService.createScheduledRemittance(userId, dto);
 //        return ApiResponseUtil.success(SuccessCode.OK);
