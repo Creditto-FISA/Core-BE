@@ -10,17 +10,16 @@ import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
-public class RegularRemittanceUpdateReqDto {
+public class RegularRemittanceUpdateDto {
 
-    private Long accountId;
-    private Long recipientId;
-    private CurrencyCode sendCurrency; // String -> CurrencyCode
-    private CurrencyCode receivedCurrency; // String -> CurrencyCode
+    private String accountNo;
     private BigDecimal sendAmount;
     private RegRemStatus regRemStatus;
+    private Integer scheduledDate;  // 매월일 경우 수정할 날짜
+    private ScheduledDay scheduledDay;    // 매주일 경우 수정할 요일
 
-    private String regRemType;      // MONTHLY/WEEKLY
-
-    private Integer scheduledDate;  // 매월 송금
-    private ScheduledDay scheduledDay;    // 매주 송금
+    private String recipientPhoneNo;
+    private String recipientBankName;
+    private String recipientBankCode;
+    private String recipientAccountNo;
 }

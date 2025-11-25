@@ -65,15 +65,11 @@ public abstract class RegularRemittance {
     public void updateDetails(
             Account account,
             Recipient recipient,
-            CurrencyCode sendCurrency,
-            CurrencyCode receivedCurrency,
             BigDecimal sendAmount,
             RegRemStatus regRemStatus
     ) {
         this.account = account;
         this.recipient = recipient;
-        this.sendCurrency = sendCurrency;
-        this.receivedCurrency = receivedCurrency;
         this.sendAmount = sendAmount;
         this.regRemStatus = regRemStatus;
     }

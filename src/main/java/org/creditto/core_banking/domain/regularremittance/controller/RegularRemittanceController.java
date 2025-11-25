@@ -53,14 +53,14 @@ public class RegularRemittanceController {
         return ApiResponseUtil.success(SuccessCode.CREATED, createdRemittance);
     }
 
-    // 등록된 정기 해외 송금 설정 수정
-    @PutMapping("/schedule/{recurId}")
+    // Task 5: 정기 해외 송금 설정 수정
+    @PutMapping("/schedule/{regRemId}")
     public ResponseEntity<BaseResponse<Void>> updateScheduledRemittance(
-            @PathVariable("recurId") Long recurId,
-            @RequestParam("userId") String userId,
-            @RequestBody RegularRemittanceUpdateReqDto dto
+            @PathVariable("regRemId") Long regRemId,
+            @RequestParam("userId") Long userId,
+            @RequestBody RegularRemittanceUpdateDto dto
     ) {
-        regularRemittanceService.updateScheduledRemittance(recurId, userId, dto);
+        regularRemittanceService.updateScheduledRemittance(regRemId, userId, dto);
         return ApiResponseUtil.success(SuccessCode.OK);
     }
 

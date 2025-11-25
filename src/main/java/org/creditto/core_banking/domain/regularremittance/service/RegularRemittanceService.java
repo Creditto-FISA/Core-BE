@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
-import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceResponseDto;
 import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemittance;
 import org.creditto.core_banking.domain.overseasremittance.repository.OverseasRemittanceRepository;
 import org.creditto.core_banking.domain.recipient.dto.RecipientCreateDto;
@@ -139,27 +138,33 @@ public class RegularRemittanceService {
 
     // 정기 해외 송금 설정 수정
     @Transactional
-    public void updateScheduledRemittance(Long recurId, String userId, RegularRemittanceUpdateReqDto dto) {
-        RegularRemittance remittance = regularRemittanceRepository.findById(recurId)
+    public void updateScheduledRemittance(Long regRemId, Long userId, RegularRemittanceUpdateDto dto) {
+        RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
 
         if (!Objects.equals(remittance.getAccount().getUserId(), userId)) {
             throw new CustomBaseException(ErrorBaseCode.FORBIDDEN);
         }
 
-        Account account = accountRepository.findById(dto.getAccountId())
+        // 계좌는 바뀐 계좌번호로 Account 변경
+        Account account = accountRepository.findByAccountNo(dto.getAccountNo())
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
-        Recipient recipient = recipientRepository.findById(dto.getRecipientId())
-                .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_RECIPIENT));
 
-////        remittance.updateDetails(
-//                account,
-//                recipient,
-//                dto.getSendCurrency(),
-//                dto.getReceivedCurrency(),
-//                dto.getSendAmount(),
-//                dto.getRegRemStatus()
-//        );
+        // 수취인은 세부사항만 변경
+        Recipient recipient = remittance.getRecipient();
+        recipient.updateDetails(
+                dto.getRecipientPhoneNo(),
+                dto.getRecipientBankName(),
+                dto.getRecipientBankCode(),
+                dto.getAccountNo()
+        );
+
+        remittance.updateDetails(
+                account,
+                recipient,
+                dto.getSendAmount(),
+                dto.getRegRemStatus()
+        );
 
         if (remittance instanceof MonthlyRegularRemittance monthly) {
             monthly.updateSchedule(dto.getScheduledDate());
