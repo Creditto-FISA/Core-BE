@@ -1,6 +1,7 @@
 package org.creditto.core_banking.domain.regularremittance.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.overseasremittance.dto.OverseasRemittanceResponseDto;
@@ -8,10 +9,7 @@ import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemitt
 import org.creditto.core_banking.domain.overseasremittance.repository.OverseasRemittanceRepository;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceCreateReqDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceResponseDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceUpdateReqDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RemittanceHistoryResDto;
+import org.creditto.core_banking.domain.regularremittance.dto.*;
 import org.creditto.core_banking.domain.regularremittance.entity.MonthlyRegularRemittance;
 import org.creditto.core_banking.domain.regularremittance.entity.RegularRemittance;
 import org.creditto.core_banking.domain.regularremittance.entity.ScheduledDay;
@@ -22,11 +20,11 @@ import org.creditto.core_banking.global.response.exception.CustomBaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -38,23 +36,24 @@ public class RegularRemittanceService {
     private final RecipientRepository recipientRepository;
 
     // 1. 사용자 정기송금 설정 내역 조회
-    public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(String userId) {
-        List<RegularRemittance> remittances = regularRemittanceRepository.findByAccountExternalUserId(userId);
+    public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(Long userId) {
+        List<RegularRemittance> remittances = regularRemittanceRepository.findByAccountUserId(userId);
         return remittances.stream()
                 .map(RegularRemittanceResponseDto::from)
                 .collect(Collectors.toList());
     }
 
-    // Task 2: 하나의 정기송금 설정에 대한 송금 기록 조회
+    // 2: 하나의 정기송금 설정에 대한 송금 기록 조회
     public List<OverseasRemittanceResponseDto> getRemittanceRecordsByRecurId(Long recurId) {
-        List<OverseasRemittance> records = overseasRemittanceRepository.findAllByRecur_RegRemIdOrderByCreatedAtDesc(recurId);
+        List<OverseasRemittance> records = overseasRemittanceRepository.findByRecur_RegRemIdOrderByCreatedAtDesc(recurId);
+//        List<OverseasRemittance> records = overseasRemittanceRepository.findAllByRecur_RegRemIdOrderByCreatedAtDesc(recurId);
         return records.stream()
                 .map(OverseasRemittanceResponseDto::from)
                 .collect(Collectors.toList());
     }
 
     // Task 2: 하나의 정기송금 설정에 대한 송금 기록 조회
-    public List<RemittanceHistoryResDto> getRegularRemittanceHistoryByRegRemId(String userId, Long regRemId) {
+    public List<RemittanceHistoryDto> getRegularRemittanceHistoryByRegRemId(Long userId, Long regRemId) {
         // 1. regRemId로 RegularRemittance 설정 조회
         RegularRemittance regularRemittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
@@ -64,44 +63,18 @@ public class RegularRemittanceService {
             throw new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE); // 소유자가 다르면 "찾을 수 없음" 처리
         }
 
-        // 3. 정기송금 타입 및 날짜 정보 추출
-        String regremType = null;
-        Integer scheduledDate = null;
-        ScheduledDay scheduledDay = null;
-
-        if (regularRemittance instanceof MonthlyRegularRemittance monthly) {
-            regremType = "MONTHLY";
-            scheduledDate = monthly.getScheduledDate();
-        } else if (regularRemittance instanceof WeeklyRegularRemittance weekly) {
-            regremType = "WEEKLY";
-            scheduledDay = weekly.getScheduledDay();
-        }
-
-        // 4. regRemId에 해당하는 OverseasRemittance 기록을 RemittanceHistoryRes DTO로 변환
-        String finalRegremType = regremType;
-        Integer finalScheduledDate = scheduledDate;
-        ScheduledDay finalScheduledDay = scheduledDay;
+        // 3. regRemId에 해당하는 OverseasRemittance 기록을 RemittanceHistoryRes DTO로 변환
         return overseasRemittanceRepository.findByRecur_RegRemIdOrderByCreatedAtDesc(regRemId).stream()
-                .map(overseas -> new RemittanceHistoryResDto(
-                        overseas.getRemittanceId(),
-                        regRemId,
-                        overseas.getRecipient().getName(),
-                        overseas.getRecipient().getBankName(),
-                        overseas.getSendCurrency(),
+                .map(overseas -> new RemittanceHistoryDto(
                         overseas.getSendAmount(),
-                        overseas.getReceiveCurrency(),
-                        overseas.getReceiveAmount(),
-                        overseas.getRemittanceStatus(),
-                        finalRegremType,
-                        finalScheduledDate,
-                        finalScheduledDay,
-                        overseas.getCreatedAt()
+                        overseas.getExchange().getExchangeRate(),
+                        overseas.getCreatedAt().toLocalDate()
                 ))
                 .collect(Collectors.toList());
     }
 
     // Task 3: 단일 송금 내역 상세 조회
-    public OverseasRemittanceResponseDto getRegularRemittanceDetail(String userId, Long remittanceId) {
+    public RemittanceDetailDto getRegularRemittanceDetail(Long userId, Long remittanceId) {
         // 1. remittanceId로 OverseasRemittance 엔티티 조회
         OverseasRemittance overseasRemittance = overseasRemittanceRepository.findById(remittanceId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ENTITY));
@@ -112,7 +85,14 @@ public class RegularRemittanceService {
         }
 
         // 3. DTO로 변환하여 반환
-        return OverseasRemittanceResponseDto.from(overseasRemittance);
+        return RemittanceDetailDto.builder()
+                .accountNo(overseasRemittance.getAccount().getAccountNo())
+                .totalFee(overseasRemittance.getFeeRecord().getTotalFee())
+                .sendAmount(overseasRemittance.getSendAmount())
+                .recipientBankName(overseasRemittance.getRecipient().getBankName())
+                .recipientAccountNo(overseasRemittance.getRecipient().getAccountNo())
+                .remittanceStatus(overseasRemittance.getRemittanceStatus())
+                .build();
     }
 
     // 정기 해외 송금 내역 신규 등록

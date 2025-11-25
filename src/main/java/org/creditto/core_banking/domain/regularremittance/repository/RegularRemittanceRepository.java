@@ -15,6 +15,6 @@ public interface RegularRemittanceRepository extends JpaRepository<RegularRemitt
             "FROM RegularRemittance rr " +
             "JOIN FETCH rr.account a " +
             "JOIN FETCH rr.recipient " +
-            "WHERE a.externalUserId = :externalUserId")
-    List<RegularRemittance> findByAccountExternalUserId(@Param("externalUserId") String externalUserId);
+            "WHERE a.accountNo IN (SELECT acc.accountNo FROM Account acc WHERE acc.userId = :userId)")
+    List<RegularRemittance> findByAccountUserId(@Param("userId") Long userId);
 }

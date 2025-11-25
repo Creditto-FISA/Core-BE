@@ -10,13 +10,13 @@ import java.math.BigDecimal;
 @Getter
 @Builder
 public class RegularRemittanceResponseDto {
+    private String accountNo;
+
     private Long regRemId;
 
     private String recipientName;
     private String recipientBankName;
 
-    private CurrencyCode sendCurrency;
-    private BigDecimal sendAmount;
     private CurrencyCode receivedCurrency;
     private RegRemStatus regRemStatus;
 
@@ -26,13 +26,10 @@ public class RegularRemittanceResponseDto {
 
     public static RegularRemittanceResponseDto from(RegularRemittance regularRemittance) {
         RegularRemittanceResponseDto.RegularRemittanceResponseDtoBuilder builder = RegularRemittanceResponseDto.builder()
+                .accountNo(regularRemittance.getAccount().getAccountNo())
                 .regRemId(regularRemittance.getRegRemId())
                 .recipientName(regularRemittance.getRecipient().getName())
                 .recipientBankName(regularRemittance.getRecipient().getBankName())
-//                .accountId(regularRemittance.getAccount().getId())
-//                .recipientId(regularRemittance.getRecipient().getRecipientId())
-                .sendCurrency(regularRemittance.getSendCurrency())
-                .sendAmount(regularRemittance.getSendAmount())
                 .receivedCurrency(regularRemittance.getReceivedCurrency())
                 .regRemStatus(regularRemittance.getRegRemStatus());
 

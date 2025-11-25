@@ -1,9 +1,6 @@
 package org.creditto.core_banking.domain.regularremittance.controller;
 
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceCreateReqDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceResponseDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RegularRemittanceUpdateReqDto;
-import org.creditto.core_banking.domain.regularremittance.dto.RemittanceHistoryResDto;
+import org.creditto.core_banking.domain.regularremittance.dto.*;
 import org.creditto.core_banking.domain.regularremittance.service.RegularRemittanceService;
 import org.creditto.core_banking.global.response.ApiResponseUtil;
 import org.creditto.core_banking.global.response.BaseResponse;
@@ -25,21 +22,21 @@ public class RegularRemittanceController {
 
     // Task 1: 사용자 정기송금 설정 내역 조회
     @GetMapping("/schedule")
-    public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(@RequestParam("userId") String userId) {
+    public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(@RequestParam("userId") Long userId) {
         return regularRemittanceService.getScheduledRemittancesByUserId(userId);
     }
 
     // Task 2: 하나의 정기송금 설정에 대한 송금 기록 조회
     @GetMapping("/schedule/{regRemId}")
-    public List<RemittanceHistoryResDto> getRemittanceRecordsByRecurId(@PathVariable("regRemId") Long regRemId, @RequestParam("userId") String userId) {
+    public List<RemittanceHistoryDto> getRemittanceRecordsByRecurId(@PathVariable("regRemId") Long regRemId, @RequestParam("userId") Long userId) {
         return regularRemittanceService.getRegularRemittanceHistoryByRegRemId(userId, regRemId);
     }
 
     // Task 3: 단일 송금 내역 상세 조회
     @GetMapping("/{remittanceId}/detail")
-    public ResponseEntity<?> getRegularRemittanceDetail(
+    public ResponseEntity<BaseResponse<RemittanceDetailDto>> getRegularRemittanceDetail(
             @PathVariable Long remittanceId,
-            @RequestParam("userId") String userId
+            @RequestParam("userId") Long userId
     ) {
         return ApiResponseUtil.success(SuccessCode.OK, regularRemittanceService.getRegularRemittanceDetail(userId, remittanceId));
     }
