@@ -6,6 +6,7 @@ import org.creditto.core_banking.domain.regularremittance.entity.*;
 import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 
 @Getter
 @Builder
@@ -23,7 +24,7 @@ public class RegularRemittanceResponseDto {
 
     private String regRemType;            // 매월/매주
     private Integer scheduledDate;        // 매월 송금
-    private ScheduledDay scheduledDay;    // 매주 송금
+    private DayOfWeek scheduledDay;    // 매주 송금
 
     public static RegularRemittanceResponseDto from(RegularRemittance regularRemittance) {
         RegularRemittanceResponseDto.RegularRemittanceResponseDtoBuilder builder = RegularRemittanceResponseDto.builder()

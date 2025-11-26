@@ -2,10 +2,10 @@ package org.creditto.core_banking.domain.regularremittance.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.creditto.core_banking.domain.regularremittance.entity.ScheduledDay;
 import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 
 @Getter
 @NoArgsConstructor
@@ -20,5 +20,5 @@ public class RegularRemittanceCreateReqDto {
     private String regRemType;      // MONTHLY/WEEKLY
 
     private Integer scheduledDate;  // 매월 송금 (1-31)
-    private ScheduledDay scheduledDay;    // 매주 송금 (MONDAY-SUNDAY)
+    private DayOfWeek scheduledDay;    // 매주 송금 (MONDAY-SUNDAY)
 }

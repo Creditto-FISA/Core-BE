@@ -50,16 +50,18 @@ public class RegularRemittanceController {
     /**
      * 단일 정기송금 내역의 상세 정보를 조회합니다.
      *
+     * @param regRemId 정기송금 ID
      * @param remittanceId 송금 ID
      * @param userId 사용자 ID
      * @return 해당 송금의 상세 정보 ({@link RemittanceDetailDto})
      */
-    @GetMapping("/{remittanceId}/detail")
+    @GetMapping("/{regRemId}/{remittanceId}")
     public ResponseEntity<BaseResponse<RemittanceDetailDto>> getRegularRemittanceDetail(
+            @PathVariable Long regRemId,
             @PathVariable Long remittanceId,
             @RequestParam("userId") Long userId
     ) {
-        return ApiResponseUtil.success(SuccessCode.OK, regularRemittanceService.getRegularRemittanceDetail(userId, remittanceId));
+        return ApiResponseUtil.success(SuccessCode.OK, regularRemittanceService.getRegularRemittanceDetail(userId, remittanceId, regRemId));
     }
 
     /**
