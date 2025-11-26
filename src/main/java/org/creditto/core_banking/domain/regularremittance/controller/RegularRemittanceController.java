@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/core/remittance")
+@RequestMapping("/api/core/remittance/schedule")
 public class RegularRemittanceController {
 
     private final RegularRemittanceService regularRemittanceService;
@@ -20,19 +20,36 @@ public class RegularRemittanceController {
         this.regularRemittanceService = regularRemittanceService;
     }
 
-    // Task 1: 사용자 정기송금 설정 내역 조회
-    @GetMapping("/schedule")
+    /**
+     * 특정 사용자의 모든 정기송금 설정 내역을 조회합니다.
+     *
+     * @param userId 사용자 ID
+     * @return 해당 사용자의 모든 정기송금 설정 목록 ({@link RegularRemittanceResponseDto})
+     */
+    @GetMapping
     public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(@RequestParam("userId") Long userId) {
         return regularRemittanceService.getScheduledRemittancesByUserId(userId);
     }
 
-    // Task 2: 하나의 정기송금 설정에 대한 송금 기록 조회
-    @GetMapping("/schedule/{regRemId}")
+    /**
+     * 특정 정기송금 설정에 대한 모든 송금 기록을 조회합니다.
+     *
+     * @param regRemId 정기송금 ID
+     * @param userId 사용자 ID
+     * @return 해당 정기송금 설정에 대한 모든 송금 기록 목록 ({@link RemittanceHistoryDto})
+     */
+    @GetMapping("/{regRemId}")
     public List<RemittanceHistoryDto> getRemittanceRecordsByRecurId(@PathVariable("regRemId") Long regRemId, @RequestParam("userId") Long userId) {
         return regularRemittanceService.getRegularRemittanceHistoryByRegRemId(userId, regRemId);
     }
 
-    // Task 3: 단일 송금 내역 상세 조회
+    /**
+     * 단일 정기송금 내역의 상세 정보를 조회합니다.
+     *
+     * @param remittanceId 송금 ID
+     * @param userId 사용자 ID
+     * @return 해당 송금의 상세 정보 ({@link RemittanceDetailDto})
+     */
     @GetMapping("/{remittanceId}/detail")
     public ResponseEntity<BaseResponse<RemittanceDetailDto>> getRegularRemittanceDetail(
             @PathVariable Long remittanceId,
@@ -41,20 +58,31 @@ public class RegularRemittanceController {
         return ApiResponseUtil.success(SuccessCode.OK, regularRemittanceService.getRegularRemittanceDetail(userId, remittanceId));
     }
 
-    // Task 4: 정기송금 신규 등록
-    @PostMapping("/schedule/add")
+    /**
+     * 신규 정기송금을 등록합니다.
+     *
+     * @param userId 사용자 ID
+     * @param dto 정기송금 생성에 필요한 정보를 담은 DTO
+     * @return 생성된 정기송금 정보 ({@link RegularRemittanceResponseDto})
+     */
+    @PostMapping("/add")
     public ResponseEntity<BaseResponse<RegularRemittanceResponseDto>> createScheduledRemittance(
             @RequestParam("userId") Long userId,
             @RequestBody RegularRemittanceCreateDto dto
     ) {
-//        regularRemittanceService.createScheduledRemittance(userId, dto);
-//        return ApiResponseUtil.success(SuccessCode.OK);
         RegularRemittanceResponseDto createdRemittance = regularRemittanceService.createScheduledRemittance(userId, dto);
         return ApiResponseUtil.success(SuccessCode.CREATED, createdRemittance);
     }
 
-    // Task 5: 정기 해외 송금 설정 수정
-    @PutMapping("/schedule/{regRemId}")
+    /**
+     * 기존 정기 해외송금 설정을 수정합니다.
+     *
+     * @param regRemId 정기송금 ID
+     * @param userId 사용자 ID
+     * @param dto 정기송금 수정에 필요한 정보를 담은 DTO
+     * @return 성공 응답 (HTTP 200 OK)
+     */
+    @PutMapping("/{regRemId}")
     public ResponseEntity<BaseResponse<Void>> updateScheduledRemittance(
             @PathVariable("regRemId") Long regRemId,
             @RequestParam("userId") Long userId,
@@ -64,7 +92,13 @@ public class RegularRemittanceController {
         return ApiResponseUtil.success(SuccessCode.OK);
     }
 
-    // 정기 해외 송금 설정 삭제
+    /**
+     * 기존 정기 해외송금 설정을 삭제합니다.
+     *
+     * @param regRemId 정기송금 ID
+     * @param userId 사용자 ID
+     * @return 성공 응답 (HTTP 200 OK)
+     */
     @DeleteMapping("/schedule/{regRemId}")
     public ResponseEntity<BaseResponse<Void>> deleteScheduledRemittance(
             @PathVariable("regRemId") Long regRemId,

@@ -8,7 +8,6 @@ import org.creditto.core_banking.domain.overseasremittance.entity.OverseasRemitt
 import org.creditto.core_banking.domain.overseasremittance.repository.OverseasRemittanceRepository;
 import org.creditto.core_banking.domain.recipient.dto.RecipientCreateDto;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
-import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
 import org.creditto.core_banking.domain.recipient.service.RecipientFactory;
 import org.creditto.core_banking.domain.regularremittance.dto.*;
 import org.creditto.core_banking.domain.regularremittance.entity.MonthlyRegularRemittance;
@@ -33,10 +32,14 @@ public class RegularRemittanceService {
     private final RegularRemittanceRepository regularRemittanceRepository;
     private final OverseasRemittanceRepository overseasRemittanceRepository;
     private final AccountRepository accountRepository;
-    private final RecipientRepository recipientRepository;
     private final RecipientFactory recipientFactory;
 
-    // Task 1: 사용자 정기송금 설정 내역 조회
+    /**
+     * 특정 사용자의 모든 정기송금 설정 내역을 조회합니다.
+     *
+     * @param userId 사용자의 ID
+     * @return 해당 사용자의 모든 정기송금 설정 목록 ({@link RegularRemittanceResponseDto})
+     */
     public List<RegularRemittanceResponseDto> getScheduledRemittancesByUserId(Long userId) {
         List<RegularRemittance> remittances = regularRemittanceRepository.findByAccountUserId(userId);
         return remittances.stream()
@@ -44,18 +47,21 @@ public class RegularRemittanceService {
                 .collect(Collectors.toList());
     }
 
-    // Task 2: 하나의 정기송금 설정에 대한 송금 기록 조회
+    /**
+     * 특정 정기송금 설정에 대한 모든 송금 기록을 조회합니다.
+     *
+     * @param userId   사용자의 ID
+     * @param regRemId 조회할 정기송금의 ID
+     * @return 해당 정기송금 설정에 대한 모든 송금 기록 목록 ({@link RemittanceHistoryDto})
+     */
     public List<RemittanceHistoryDto> getRegularRemittanceHistoryByRegRemId(Long userId, Long regRemId) {
-        // 1. regRemId로 RegularRemittance 설정 조회
         RegularRemittance regularRemittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
 
-        // 2. 보안 검증: 요청한 externalUserId와 정기송금 설정의 소유자(account.externalUserId)가 일치하는지 확인
         if (!regularRemittance.getAccount().getUserId().equals(userId)) {
             throw new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE); // 소유자가 다르면 "찾을 수 없음" 처리
         }
 
-        // 3. regRemId에 해당하는 OverseasRemittance 기록을 RemittanceHistoryRes DTO로 변환
         return overseasRemittanceRepository.findByRecur_RegRemIdOrderByCreatedAtDesc(regRemId).stream()
                 .map(overseas -> new RemittanceHistoryDto(
                         overseas.getSendAmount(),
@@ -65,18 +71,21 @@ public class RegularRemittanceService {
                 .collect(Collectors.toList());
     }
 
-    // Task 3: 단일 송금 내역 상세 조회
+    /**
+     * 단일 정기송금 내역의 상세 정보를 조회합니다.
+     *
+     * @param userId       사용자의 ID
+     * @param remittanceId 조회할 송금의 ID
+     * @return 해당 송금의 상세 정보 ({@link RemittanceDetailDto})
+     */
     public RemittanceDetailDto getRegularRemittanceDetail(Long userId, Long remittanceId) {
-        // 1. remittanceId로 OverseasRemittance 엔티티 조회
         OverseasRemittance overseasRemittance = overseasRemittanceRepository.findById(remittanceId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ENTITY));
 
-        // 2. 요청한 userId와 송금 기록의 소유자(clientId)가 일치하는지 확인
         if (!overseasRemittance.getUserId().equals(userId)) {
             throw new CustomBaseException(ErrorBaseCode.NOT_FOUND_ENTITY); // 소유자가 다르면 "찾을 수 없음" 처리
         }
 
-        // 3. DTO로 변환하여 반환
         return RemittanceDetailDto.builder()
                 .accountNo(overseasRemittance.getAccount().getAccountNo())
                 .totalFee(overseasRemittance.getFeeRecord().getTotalFee())
@@ -87,7 +96,13 @@ public class RegularRemittanceService {
                 .build();
     }
 
-    // Task 4: 정기송금 신규 등록
+    /**
+     * 신규 정기송금을 등록합니다.
+     *
+     * @param userId 사용자의 ID
+     * @param dto    정기송금 생성에 필요한 정보를 담은 DTO
+     * @return 생성된 정기송금 정보 ({@link RegularRemittanceResponseDto})
+     */
     @Transactional
     public RegularRemittanceResponseDto createScheduledRemittance(Long userId, RegularRemittanceCreateDto dto) {
         Account account = accountRepository.findByAccountNo(dto.getAccountNo())
@@ -136,7 +151,13 @@ public class RegularRemittanceService {
         return RegularRemittanceResponseDto.from(savedRemittance);
     }
 
-    // 정기 해외 송금 설정 수정
+    /**
+     * 기존 정기 해외송금 설정을 수정합니다.
+     *
+     * @param regRemId 정기송금 ID
+     * @param userId   사용자 ID
+     * @param dto      정기송금 수정에 필요한 정보를 담은 DTO
+     */
     @Transactional
     public void updateScheduledRemittance(Long regRemId, Long userId, RegularRemittanceUpdateDto dto) {
         RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
@@ -173,7 +194,12 @@ public class RegularRemittanceService {
         }
     }
 
-    // 정기 해외 송금 설정 삭제
+    /**
+     * 기존 정기 해외송금 설정을 삭제합니다.
+     *
+     * @param regRemId 삭제할 정기송금의 ID
+     * @param userId   사용자 ID
+     */
     @Transactional
     public void deleteScheduledRemittance(Long regRemId, Long userId) {
         RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
@@ -185,7 +211,6 @@ public class RegularRemittanceService {
 
         regularRemittanceRepository.delete(remittance);
     }
-
 
 }
 
