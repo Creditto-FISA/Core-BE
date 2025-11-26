@@ -57,10 +57,7 @@ public class RegularRemittanceService {
     public List<RemittanceHistoryDto> getRegularRemittanceHistoryByRegRemId(Long userId, Long regRemId) {
         RegularRemittance regularRemittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
-
-        if (!regularRemittance.getAccount().getUserId().equals(userId)) {
-            throw new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE); // 소유자가 다르면 "찾을 수 없음" 처리
-        }
+        verifyUserOwnership(regularRemittance.getAccount().getUserId(), userId);
 
         return overseasRemittanceRepository.findByRecur_RegRemIdOrderByCreatedAtDesc(regRemId).stream()
                 .map(overseas -> new RemittanceHistoryDto(
@@ -81,10 +78,7 @@ public class RegularRemittanceService {
     public RemittanceDetailDto getRegularRemittanceDetail(Long userId, Long remittanceId) {
         OverseasRemittance overseasRemittance = overseasRemittanceRepository.findById(remittanceId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ENTITY));
-
-        if (!overseasRemittance.getUserId().equals(userId)) {
-            throw new CustomBaseException(ErrorBaseCode.NOT_FOUND_ENTITY); // 소유자가 다르면 "찾을 수 없음" 처리
-        }
+        verifyUserOwnership(overseasRemittance.getUserId(), userId);
 
         return RemittanceDetailDto.builder()
                 .accountNo(overseasRemittance.getAccount().getAccountNo())
@@ -107,10 +101,7 @@ public class RegularRemittanceService {
     public RegularRemittanceResponseDto createScheduledRemittance(Long userId, RegularRemittanceCreateDto dto) {
         Account account = accountRepository.findByAccountNo(dto.getAccountNo())
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
-
-        if (!Objects.equals(account.getUserId(), userId)) {
-            throw new CustomBaseException(ErrorBaseCode.FORBIDDEN);
-        }
+        verifyUserOwnership(account.getUserId(), userId);
 
         RecipientCreateDto recipientCreateDto = new RecipientCreateDto(
                 dto.getRecipientName(),
@@ -162,27 +153,14 @@ public class RegularRemittanceService {
     public void updateScheduledRemittance(Long regRemId, Long userId, RegularRemittanceUpdateDto dto) {
         RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
+        verifyUserOwnership(remittance.getAccount().getUserId(), userId);
 
-        if (!Objects.equals(remittance.getAccount().getUserId(), userId)) {
-            throw new CustomBaseException(ErrorBaseCode.FORBIDDEN);
-        }
-
-        // 계좌는 바뀐 계좌번호로 Account 변경
         Account account = accountRepository.findByAccountNo(dto.getAccountNo())
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
-
-        // 수취인은 세부사항만 변경
-        Recipient recipient = remittance.getRecipient();
-        recipient.updateDetails(
-                dto.getRecipientPhoneNo(),
-                dto.getRecipientBankName(),
-                dto.getRecipientBankCode(),
-                dto.getAccountNo()
-        );
+        verifyUserOwnership(account.getUserId(), userId);
 
         remittance.updateDetails(
                 account,
-                recipient,
                 dto.getSendAmount(),
                 dto.getRegRemStatus()
         );
@@ -204,12 +182,15 @@ public class RegularRemittanceService {
     public void deleteScheduledRemittance(Long regRemId, Long userId) {
         RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
-
-        if (!Objects.equals(remittance.getAccount().getUserId(), userId)) {
-            throw new CustomBaseException(ErrorBaseCode.FORBIDDEN);
-        }
+        verifyUserOwnership(remittance.getAccount().getUserId(), userId);
 
         regularRemittanceRepository.delete(remittance);
+    }
+
+    private void verifyUserOwnership(Long ownerId, Long requesterId) {
+        if (!Objects.equals(ownerId, requesterId)) {
+            throw new CustomBaseException(ErrorBaseCode.FORBIDDEN);
+        }
     }
 
 }

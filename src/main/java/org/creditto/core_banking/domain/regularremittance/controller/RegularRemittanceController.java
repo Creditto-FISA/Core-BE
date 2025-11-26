@@ -99,7 +99,7 @@ public class RegularRemittanceController {
      * @param userId 사용자 ID
      * @return 성공 응답 (HTTP 200 OK)
      */
-    @DeleteMapping("/schedule/{regRemId}")
+    @DeleteMapping("/{regRemId}")
     public ResponseEntity<BaseResponse<Void>> deleteScheduledRemittance(
             @PathVariable("regRemId") Long regRemId,
             @RequestParam("userId") Long userId

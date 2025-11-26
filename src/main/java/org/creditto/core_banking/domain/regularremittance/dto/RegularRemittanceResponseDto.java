@@ -17,6 +17,7 @@ public class RegularRemittanceResponseDto {
     private String recipientName;
     private String recipientBankName;
 
+    private BigDecimal sendAmount;
     private CurrencyCode receivedCurrency;
     private RegRemStatus regRemStatus;
 
@@ -30,6 +31,7 @@ public class RegularRemittanceResponseDto {
                 .regRemId(regularRemittance.getRegRemId())
                 .recipientName(regularRemittance.getRecipient().getName())
                 .recipientBankName(regularRemittance.getRecipient().getBankName())
+                .sendAmount(regularRemittance.getSendAmount())
                 .receivedCurrency(regularRemittance.getReceivedCurrency())
                 .regRemStatus(regularRemittance.getRegRemStatus());
 
