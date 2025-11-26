@@ -14,7 +14,6 @@ import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
 
 @Entity
 @Getter
