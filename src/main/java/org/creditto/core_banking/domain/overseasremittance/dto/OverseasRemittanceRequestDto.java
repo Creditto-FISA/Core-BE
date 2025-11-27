@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.overseasremittance.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -31,6 +32,7 @@ public class OverseasRemittanceRequestDto {
     /**
      * 수취인의 상세 정보
      */
+    @Valid
     @NotNull(message = "수취인 정보는 필수입니다.")
     private RecipientInfo recipientInfo;
 
