@@ -38,4 +38,4 @@ management:
         include: health, info
 
 server:
-  port: 8090
+  port: ${SERVER_PORT:8090}
