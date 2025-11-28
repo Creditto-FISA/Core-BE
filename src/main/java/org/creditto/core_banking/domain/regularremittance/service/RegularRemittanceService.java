@@ -56,6 +56,8 @@ public class RegularRemittanceService {
         RegularRemittance remittance = regularRemittanceRepository.findById(regRemId)
                 .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_REGULAR_REMITTANCE));
 
+        verifyUserOwnership(remittance.getAccount().getUserId(), userId);
+
         Recipient recipient = remittance.getRecipient();
         String regRemType = null;
         Integer scheduledDate = null;
@@ -83,6 +85,7 @@ public class RegularRemittanceService {
                 .recipientName(recipient.getName())
                 .recipientPhoneCc(recipient.getPhoneCc())
                 .recipientPhoneNo(recipient.getPhoneNo())
+                .regRemStatus(remittance.getRegRemStatus())
                 .build();
     }
 
@@ -163,7 +166,8 @@ public class RegularRemittanceService {
                     dto.getSendCurrency(),
                     dto.getReceiveCurrency(),
                     dto.getSendAmount(),
-                    dto.getScheduledDate()
+                    dto.getScheduledDate(),
+                    dto.getStartedAt()
             );
         } else if ("WEEKLY".equalsIgnoreCase(dto.getRegRemType())) {
             newRemittance = WeeklyRegularRemittance.of(
@@ -172,7 +176,8 @@ public class RegularRemittanceService {
                     dto.getSendCurrency(),
                     dto.getReceiveCurrency(),
                     dto.getSendAmount(),
-                    dto.getScheduledDay()
+                    dto.getScheduledDay(),
+                    dto.getStartedAt()
             );
         } else {
             throw new CustomBaseException(ErrorBaseCode.BAD_REQUEST);

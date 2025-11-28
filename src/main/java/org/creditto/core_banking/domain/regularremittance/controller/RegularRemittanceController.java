@@ -64,7 +64,7 @@ public class RegularRemittanceController {
      * @param userId 사용자 ID
      * @return 해당 송금의 상세 정보 ({@link RemittanceHistoryDetailDto})
      */
-    @GetMapping("/{regRemId}/{remittanceId}")
+    @GetMapping("/history/{regRemId}/{remittanceId}")
     public ResponseEntity<BaseResponse<RemittanceHistoryDetailDto>> getRemittanceHistoryDetail(
             @PathVariable Long regRemId,
             @PathVariable Long remittanceId,

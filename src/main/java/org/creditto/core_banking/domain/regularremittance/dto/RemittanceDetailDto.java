@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.creditto.core_banking.domain.overseasremittance.entity.RemittanceStatus;
+import org.creditto.core_banking.domain.regularremittance.entity.RegRemStatus;
 import org.creditto.core_banking.global.common.CurrencyCode;
 
 import java.math.BigDecimal;
@@ -34,5 +35,5 @@ public class RemittanceDetailDto {
     private String recipientPhoneCc;
     private String recipientPhoneNo;
 
-    private RemittanceStatus remittanceStatus;
+    private RegRemStatus regRemStatus;
 }
