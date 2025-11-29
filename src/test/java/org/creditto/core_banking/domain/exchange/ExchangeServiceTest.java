@@ -214,8 +214,8 @@ class  ExchangeServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getCurrencyCode()).isEqualTo("USD");
-        assertThat(result.getBaseRate()).isEqualTo("1300.00");
+        assertThat(result.getCurrencyUnit()).isEqualTo("USD");
+        assertThat(result.getExchangeRate()).isEqualByComparingTo(new BigDecimal("1300.00"));
     }
 
     @Test
