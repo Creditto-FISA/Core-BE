@@ -13,8 +13,8 @@ import java.util.List;
  * 모든 조회 기능은 읽기 전용 트랜잭션(readOnly = true)으로 동작하여 성능을 최적화합니다.
  */
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RemittanceQueryService {
 
     private final OverseasRemittanceRepository remittanceRepository;
