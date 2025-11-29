@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -100,17 +99,6 @@ public class AccountService {
     }
 
     public AccountSummaryRes getTotalBalanceByUserId(Long userId) {
-        List<Account> accountList = accountRepository.findAccountByUserId(userId);
-
-        BigDecimal sum = accountList.stream()
-                .filter(Objects::nonNull)
-                .map(Account::getBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        long accountCount = accountList.stream()
-                .filter(Objects::nonNull)
-                .count();
-
-        return new AccountSummaryRes(accountCount, sum);
+        return accountRepository.findAccountSummaryByUserId(userId);
     }
 }

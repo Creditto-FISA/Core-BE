@@ -203,35 +203,16 @@ class AccountServiceTest {
     void getTotalBalanceByUserId_returnsAggregateBalanceFromRepository() {
         Long userId = 7L;
 
-        Account account1 = Account.of(
-                "ACC001",
-                "테스트 계좌",
-                BigDecimal.valueOf(100000),
-                AccountType.DEPOSIT,
-                AccountState.ACTIVE,
-                userId
-        );
+        AccountSummaryRes expected = new AccountSummaryRes(2, BigDecimal.valueOf(50000));
+        when(accountRepository.findAccountSummaryByUserId(userId)).thenReturn(expected);
 
-        Account account2 = Account.of(
-                "ACC002",
-                "적금계좌",
-                BigDecimal.valueOf(50000),
-                AccountType.SAVINGS,
-                AccountState.ACTIVE,
-                userId
-        );
+        AccountSummaryRes result = accountService.getTotalBalanceByUserId(userId);
+        BigDecimal totalBalance = result.totalBalance();
+        long accountCount = result.accountCount();
 
-        List<Account> accountList = List.of(account1, account2);
-
-        when(accountRepository.findAccountByUserId(userId)).thenReturn(accountList);
-
-        AccountSummaryRes res = accountService.getTotalBalanceByUserId(userId);
-        BigDecimal totalBalance = res.totalBalance();
-        long accountCount = res.accountCount();
-
-        Assertions.assertThat(totalBalance).isEqualByComparingTo(account1.getBalance().add(account2.getBalance()));
+        Assertions.assertThat(totalBalance).isEqualByComparingTo(BigDecimal.valueOf(50000));
         Assertions.assertThat(accountCount).isEqualTo(2);
-        verify(accountRepository).findAccountByUserId(userId);
+        verify(accountRepository).findAccountSummaryByUserId(userId);
         verifyNoMoreInteractions(accountRepository);
         verifyNoInteractions(strategyFactory);
     }
@@ -240,13 +221,13 @@ class AccountServiceTest {
     @DisplayName("잔액이 0인 경우 0을 반환")
     void getTotalBalanceByUserId_returnsZeroWhenRepositoryReportsZero() {
         Long userId = 15L;
-        when(accountRepository.findAccountByUserId(userId)).thenReturn(List.of());
+        when(accountRepository.findAccountSummaryByUserId(userId)).thenReturn(new AccountSummaryRes(0, BigDecimal.ZERO));
 
         AccountSummaryRes res = accountService.getTotalBalanceByUserId(userId);
 
         Assertions.assertThat(res.totalBalance()).isEqualTo(BigDecimal.ZERO);
         Assertions.assertThat(res.accountCount()).isZero();
-        verify(accountRepository).findAccountByUserId(userId);
+        verify(accountRepository).findAccountSummaryByUserId(userId);
         verifyNoMoreInteractions(accountRepository);
         verifyNoInteractions(strategyFactory);
     }

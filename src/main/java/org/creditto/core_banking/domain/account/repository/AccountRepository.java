@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.account.repository;
 
+import org.creditto.core_banking.domain.account.dto.AccountSummaryRes;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a.balance FROM Account a WHERE a.id = :id")
     Optional<BigDecimal> findBalanceById(@Param("id") Long id);
+
+    @Query("SELECT new org.creditto.core_banking.domain.account.dto.AccountSummaryRes( " +
+            "COUNT(ac), COALESCE(SUM(ac.balance), 0)) " +
+            "FROM Account ac WHERE ac.userId = :userId")
+    AccountSummaryRes findAccountSummaryByUserId(@Param("userId") Long userId);
 }
