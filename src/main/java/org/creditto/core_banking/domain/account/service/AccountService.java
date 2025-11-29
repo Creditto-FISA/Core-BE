@@ -3,6 +3,7 @@ package org.creditto.core_banking.domain.account.service;
 import lombok.RequiredArgsConstructor;
 import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
+import org.creditto.core_banking.domain.account.dto.AccountSummaryRes;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.entity.AccountState;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
@@ -97,7 +98,7 @@ public class AccountService {
                 .toList();
     }
 
-    public BigDecimal getTotalBalanceByUserId(Long userId) {
-        return accountRepository.sumAccountBalanceByUserId(userId);
+    public AccountSummaryRes getTotalBalanceByUserId(Long userId) {
+        return accountRepository.findAccountSummaryByUserId(userId);
     }
 }

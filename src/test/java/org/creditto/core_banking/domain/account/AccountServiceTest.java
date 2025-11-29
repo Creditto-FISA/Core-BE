@@ -3,6 +3,7 @@ package org.creditto.core_banking.domain.account;
 import org.assertj.core.api.Assertions;
 import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
+import org.creditto.core_banking.domain.account.dto.AccountSummaryRes;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.entity.AccountState;
 import org.creditto.core_banking.domain.account.entity.AccountType;
@@ -201,13 +202,17 @@ class AccountServiceTest {
     @DisplayName("전체 잔액 합계 조회 테스트")
     void getTotalBalanceByUserId_returnsAggregateBalanceFromRepository() {
         Long userId = 7L;
-        BigDecimal expectedBalance = new BigDecimal("12345.67");
-        when(accountRepository.sumAccountBalanceByUserId(userId)).thenReturn(expectedBalance);
 
-        BigDecimal totalBalance = accountService.getTotalBalanceByUserId(userId);
+        AccountSummaryRes expected = new AccountSummaryRes(2, BigDecimal.valueOf(50000));
+        when(accountRepository.findAccountSummaryByUserId(userId)).thenReturn(expected);
 
-        Assertions.assertThat(totalBalance).isEqualByComparingTo(expectedBalance);
-        verify(accountRepository).sumAccountBalanceByUserId(userId);
+        AccountSummaryRes result = accountService.getTotalBalanceByUserId(userId);
+        BigDecimal totalBalance = result.totalBalance();
+        long accountCount = result.accountCount();
+
+        Assertions.assertThat(totalBalance).isEqualByComparingTo(BigDecimal.valueOf(50000));
+        Assertions.assertThat(accountCount).isEqualTo(2);
+        verify(accountRepository).findAccountSummaryByUserId(userId);
         verifyNoMoreInteractions(accountRepository);
         verifyNoInteractions(strategyFactory);
     }
@@ -216,12 +221,13 @@ class AccountServiceTest {
     @DisplayName("잔액이 0인 경우 0을 반환")
     void getTotalBalanceByUserId_returnsZeroWhenRepositoryReportsZero() {
         Long userId = 15L;
-        when(accountRepository.sumAccountBalanceByUserId(userId)).thenReturn(BigDecimal.ZERO);
+        when(accountRepository.findAccountSummaryByUserId(userId)).thenReturn(new AccountSummaryRes(0, BigDecimal.ZERO));
 
-        BigDecimal totalBalance = accountService.getTotalBalanceByUserId(userId);
+        AccountSummaryRes res = accountService.getTotalBalanceByUserId(userId);
 
-        Assertions.assertThat(totalBalance).isZero();
-        verify(accountRepository).sumAccountBalanceByUserId(userId);
+        Assertions.assertThat(res.totalBalance()).isEqualTo(BigDecimal.ZERO);
+        Assertions.assertThat(res.accountCount()).isZero();
+        verify(accountRepository).findAccountSummaryByUserId(userId);
         verifyNoMoreInteractions(accountRepository);
         verifyNoInteractions(strategyFactory);
     }
