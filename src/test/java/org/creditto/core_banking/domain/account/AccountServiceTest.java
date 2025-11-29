@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.account;
 
+import org.assertj.core.api.Assertions;
 import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
 import org.creditto.core_banking.domain.account.entity.Account;
@@ -27,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -194,5 +195,34 @@ class AccountServiceTest {
         assertThat(result.size()).isEqualTo(2);
         assertThat(result.get(0).accountNo()).isEqualTo("ACC001");
         assertThat(result.get(1).accountName()).isEqualTo("적금계좌");
+    }
+
+    @Test
+    @DisplayName("전체 잔액 합계 조회 테스트")
+    void getTotalBalanceByUserId_returnsAggregateBalanceFromRepository() {
+        Long userId = 7L;
+        BigDecimal expectedBalance = new BigDecimal("12345.67");
+        when(accountRepository.sumAccountBalanceByUserId(userId)).thenReturn(expectedBalance);
+
+        BigDecimal totalBalance = accountService.getTotalBalanceByUserId(userId);
+
+        Assertions.assertThat(totalBalance).isEqualByComparingTo(expectedBalance);
+        verify(accountRepository).sumAccountBalanceByUserId(userId);
+        verifyNoMoreInteractions(accountRepository);
+        verifyNoInteractions(strategyFactory);
+    }
+
+    @Test
+    @DisplayName("잔액이 0인 경우 0을 반환")
+    void getTotalBalanceByUserId_returnsZeroWhenRepositoryReportsZero() {
+        Long userId = 15L;
+        when(accountRepository.sumAccountBalanceByUserId(userId)).thenReturn(BigDecimal.ZERO);
+
+        BigDecimal totalBalance = accountService.getTotalBalanceByUserId(userId);
+
+        Assertions.assertThat(totalBalance).isZero();
+        verify(accountRepository).sumAccountBalanceByUserId(userId);
+        verifyNoMoreInteractions(accountRepository);
+        verifyNoInteractions(strategyFactory);
     }
 }
