@@ -3,6 +3,7 @@ package org.creditto.core_banking.domain.exchange;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRateRes;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
+import org.creditto.core_banking.domain.exchange.dto.SingleExchangeRateRes;
 import org.creditto.core_banking.domain.exchange.entity.Exchange;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
 import org.creditto.core_banking.domain.exchange.service.ExchangeService;
@@ -29,7 +30,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class ExchangeServiceTest {
+class  ExchangeServiceTest {
 
     @Mock
     private ExchangeRateProvider exchangeRateProvider;
@@ -200,5 +201,33 @@ class ExchangeServiceTest {
                 .isInstanceOf(CustomBaseException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
+    }
+
+    @Test
+    @DisplayName("특정 통화(USD) 환율 조회 성공")
+    void getRateByCurrency_Success() {
+        // Given
+        given(exchangeRateProvider.getExchangeRates()).willReturn(rateMap);
+
+        // When
+        SingleExchangeRateRes result = exchangeService.getRateByCurrency(CurrencyCode.USD);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getCurrencyUnit()).isEqualTo("USD");
+        assertThat(result.getBaseRate()).isEqualTo("1300.00");
+    }
+
+    @Test
+    @DisplayName("지원하지 않는 통화(EUR) 환율 조회 시 실패")
+    void getRateByCurrency_NotFound_ThrowsException() {
+        // Given
+        given(exchangeRateProvider.getExchangeRates()).willReturn(rateMap);
+
+        // When & Then
+        assertThatThrownBy(() -> exchangeService.getRateByCurrency(CurrencyCode.EUR))
+            .isInstanceOf(CustomBaseException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
     }
 }
