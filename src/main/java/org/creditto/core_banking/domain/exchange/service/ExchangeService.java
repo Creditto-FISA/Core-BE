@@ -7,6 +7,7 @@ import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
 import org.creditto.core_banking.domain.exchange.entity.Exchange;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
+import org.creditto.core_banking.domain.exchange.dto.SingleExchangeRateRes;
 import org.creditto.core_banking.global.common.CurrencyCode;
 import org.creditto.core_banking.global.feign.ExchangeRateProvider;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
@@ -37,6 +38,17 @@ public class ExchangeService {
      */
     public Map<String, ExchangeRateRes> getLatestRates() {
         return exchangeRateProvider.getExchangeRates();
+    }
+
+    /**
+     * 특정 통화의 최신 환율 정보를 조회하여 반환
+     * @param currencyCode 조회할 통화 코드
+     * @return 특정 통화의 최신 환율 정보
+     */
+    public SingleExchangeRateRes getRateByCurrency(CurrencyCode currencyCode) {
+        Map<String, ExchangeRateRes> rateMap = getLatestRates();
+        ExchangeRateRes exchangeRateRes = findRate(rateMap, currencyCode);
+        return SingleExchangeRateRes.from(exchangeRateRes);
     }
 
     /**
