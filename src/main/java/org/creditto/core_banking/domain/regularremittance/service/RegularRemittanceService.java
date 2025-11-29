@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RegularRemittanceService {
 
     private final RegularRemittanceRepository regularRemittanceRepository;

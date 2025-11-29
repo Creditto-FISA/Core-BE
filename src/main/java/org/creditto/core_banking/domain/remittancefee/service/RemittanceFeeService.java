@@ -103,7 +103,6 @@ public class RemittanceFeeService {
             BigDecimal feeRate = policy.getFeeRate().divide(ONE_HUNDRED, CALCULATION_SCALE, RoundingMode.HALF_UP);
             BigDecimal calculatedSendAmount = normalizeAmountByCurrency(sendAmount, currency);
 
-            // TODO : RoundingMode.HALF_UP 할지 DOWN 할지 논의 필요
             return calculatedSendAmount.multiply(feeRate).multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
         } else {
             return BigDecimal.ZERO;
@@ -114,7 +113,6 @@ public class RemittanceFeeService {
         BigDecimal feeAmount = policy.getFeeAmount();
         BigDecimal calculatedSendAmount = normalizeAmountByCurrency(feeAmount, policy.getCurrencyCode());
 
-        // TODO : RoundingMode.HALF_UP 할지 DOWN 할지 논의 필요
         return calculatedSendAmount.multiply(exchangeRate).setScale(0, RoundingMode.HALF_UP);
     }
 

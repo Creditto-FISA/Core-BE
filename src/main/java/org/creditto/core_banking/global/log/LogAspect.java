@@ -1,4 +1,4 @@
-package org.creditto.core_banking.global.aop;
+package org.creditto.core_banking.global.log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,11 +11,12 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.creditto.core_banking.global.response.BaseResponse;
+import org.creditto.core_banking.global.util.MaskingUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.http.ResponseEntity;
-import org.creditto.core_banking.global.response.BaseResponse;
 
 import java.util.Arrays;
 
@@ -60,7 +61,8 @@ public class LogAspect {
             argsAsString = Arrays.toString(args);
         }
 
-        // Request Body (DTO) 로깅
+        argsAsString = MaskingUtil.maskSensitiveData(argsAsString);
+
         if (args.length > 0) {
             log.info("[{}] {} {} - RequestBody: {}",
                     className,
@@ -94,6 +96,8 @@ public class LogAspect {
             dataAsString = String.valueOf(dataForLog);
         }
 
+        dataAsString = MaskingUtil.maskSensitiveData(dataAsString);
+
         log.info("[{}] {} {} - ResponseData: {}",
                 className,
                 request.getMethod(),
@@ -113,7 +117,8 @@ public class LogAspect {
         log.info("[{}] {}() called", className, methodName);
 
         if (args.length > 0) {
-            log.debug("[{}] Parameters: {}", className, Arrays.toString(args));
+            String params = MaskingUtil.maskSensitiveData(Arrays.toString(args));
+            log.debug("[{}] Parameters: {}", className, params);
         }
     }
 }
