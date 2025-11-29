@@ -51,8 +51,8 @@ public class AccountController {
         return ApiResponseUtil.success(SuccessCode.OK, accountService.getAccountByUserId(userId));
     }
 
-    @GetMapping("/balance/all/{userId}")
-    public ResponseEntity<BaseResponse<BigDecimal>> getTotalBalanceByUserId(@PathVariable(name = "userId") Long userId) {
+    @GetMapping("/balance/total")
+    public ResponseEntity<BaseResponse<BigDecimal>> getTotalBalanceByUserId(@RequestParam(name = "userId") Long userId) {
         return ApiResponseUtil.success(SuccessCode.OK, accountService.getTotalBalanceByUserId(userId));
     }
 }
