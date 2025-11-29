@@ -9,12 +9,12 @@ import java.math.BigDecimal;
 @Builder
 public class SingleExchangeRateRes {
 
-    private final String currencyUnit; // 통화 코드
+    private final String currencyCode; // 통화 코드
     private final BigDecimal exchangeRate; // 매매 기준율
 
     public static SingleExchangeRateRes from(ExchangeRateRes exchangeRateRes) {
         return SingleExchangeRateRes.builder()
-            .currencyUnit(exchangeRateRes.getCurrencyUnit())
+            .currencyCode(exchangeRateRes.getCurrencyUnit())
             .exchangeRate(new BigDecimal(exchangeRateRes.getBaseRate().replace(",", "")))
             .build();
     }

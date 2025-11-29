@@ -45,7 +45,7 @@ public class ExchangeController {
      */
     @GetMapping("/{currency}")
     public ResponseEntity<BaseResponse<SingleExchangeRateRes>> getExchangeRate(@PathVariable String currency) {
-        CurrencyCode currencyCode = CurrencyCode.valueOf(currency.toUpperCase());
+        CurrencyCode currencyCode = CurrencyCode.from(currency);
         return ApiResponseUtil.success(SuccessCode.OK, exchangeService.getRateByCurrency(currencyCode));
     }
 
