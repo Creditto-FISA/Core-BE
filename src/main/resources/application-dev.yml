@@ -1,12 +1,4 @@
 spring:
-  application:
-    name: core-banking
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,17 +21,6 @@ exchange:
   auth-key: ${EX_API_KEY}
 
 management:
-  endpoint:
-    info:
-      access: read_only
-    health:
-      access: read_only
-  endpoints:
-    access:
-      default: none
-    web:
-      exposure:
-        include: health, info
   tracing:
     sampling:
       probability: 1.0
@@ -49,3 +30,5 @@ management:
 
 logging:
   config: classpath:logback-dev.xml
+  level:
+    org.hibernate.sql: DEBUG
