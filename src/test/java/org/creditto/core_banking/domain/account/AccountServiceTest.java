@@ -89,8 +89,8 @@ class AccountServiceTest {
         verify(accountRepository).save(any(Account.class));
 
         Account capturedAccount = accountCaptor.getValue();
-        assertThat(capturedAccount.getPassword()).isEqualTo(request.accountName());
-        assertThat(capturedAccount.getAccountName()).isEqualTo(encodedPassword);
+        assertThat(capturedAccount.getPassword()).isEqualTo(encodedPassword);
+        assertThat(capturedAccount.getAccountName()).isEqualTo(request.accountName());
         assertThat(capturedAccount.getAccountType()).isEqualTo(request.accountType());
         assertThat(capturedAccount.getAccountState()).isEqualTo(AccountState.ACTIVE);
         assertThat(capturedAccount.getUserId()).isEqualTo(userId);
@@ -108,16 +108,13 @@ class AccountServiceTest {
                 );
         Long userId = 1L;
 
-        // BDDMockito.willDoNothing()... is used to explicitly state that a void method call is expected and should do nothing.
-        willDoNothing().given(passwordValidator).validatePassword(request.password());
-
         // When & Then
         assertThatThrownBy(() -> accountService.createAccount(request, userId))
                 .isInstanceOf(CustomBaseException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorBaseCode.MISMATCH_PASSWORD);
 
-        verify(passwordValidator).validatePassword(request.password());
+        verify(passwordValidator, never()).validatePassword(anyString());
         verify(passwordEncoder, never()).encode(anyString());
         verify(accountRepository, never()).save(any(Account.class));
     }
@@ -156,7 +153,7 @@ class AccountServiceTest {
         Long accountId = 1L;
         String rawPassword = "1234";
         String encodedPassword = "encoded_password";
-        Account mockAccount = Account.of("ACC001", "테스트 계좌", encodedPassword, BigDecimal.ZERO, AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
+        Account mockAccount = Account.of("ACC001", encodedPassword, "테스트 계좌", BigDecimal.ZERO, AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
 
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mockAccount));
         given(passwordEncoder.matches(rawPassword, encodedPassword)).willReturn(true);
@@ -176,7 +173,7 @@ class AccountServiceTest {
         Long accountId = 1L;
         String rawPassword = "wrong_password";
         String encodedPassword = "encoded_password";
-        Account mockAccount = Account.of("ACC001", "테스트 계좌", encodedPassword, BigDecimal.ZERO, AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
+        Account mockAccount = Account.of("ACC001", encodedPassword, "테스트 계좌", BigDecimal.ZERO, AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
 
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mockAccount));
         given(passwordEncoder.matches(rawPassword, encodedPassword)).willReturn(false);
@@ -240,7 +237,7 @@ class AccountServiceTest {
     void getBalance_ById_Success() {
         // given
         Long accountId = 1L;
-        Account mockAccount = Account.of("ACC001", "테스트 계좌", "password", BigDecimal.valueOf(100000), AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
+        Account mockAccount = Account.of("ACC001", "password", "테스트 계좌", BigDecimal.valueOf(100000), AccountType.DEPOSIT, AccountState.ACTIVE, 1L);
 
         given(accountRepository.findById(accountId)).willReturn(Optional.of(mockAccount));
 
@@ -273,8 +270,8 @@ class AccountServiceTest {
         // given
         Long userId = 1L;
 
-        Account account1 = Account.of("ACC001", "테스트 계좌", "pwd1", BigDecimal.valueOf(100000), AccountType.DEPOSIT, AccountState.ACTIVE, userId);
-        Account account2 = Account.of("ACC002", "적금계좌", "pwd2", BigDecimal.valueOf(50000), AccountType.SAVINGS, AccountState.ACTIVE, userId);
+        Account account1 = Account.of("ACC001", "pwd1", "테스트 계좌", BigDecimal.valueOf(100000), AccountType.DEPOSIT, AccountState.ACTIVE, userId);
+        Account account2 = Account.of("ACC002", "pwd2", "적금계좌", BigDecimal.valueOf(50000), AccountType.SAVINGS, AccountState.ACTIVE, userId);
 
         given(accountRepository.findAccountByUserId(userId))
                 .willReturn(List.of(account1, account2));

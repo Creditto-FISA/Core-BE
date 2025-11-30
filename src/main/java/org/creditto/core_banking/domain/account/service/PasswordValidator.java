@@ -12,7 +12,7 @@ public class PasswordValidator {
             throw new CustomBaseException(ErrorBaseCode.PASSWORD_REPEATING_DIGITS);
         }
         if (isSequentialNum(password)) {
-            throw new CustomBaseException(ErrorBaseCode.PASSWORD_SEQUENTIAL_DIGIS);
+            throw new CustomBaseException(ErrorBaseCode.PASSWORD_SEQUENTIAL_DIGITS);
         }
     }
 
