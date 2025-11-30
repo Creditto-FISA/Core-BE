@@ -42,7 +42,7 @@ public class Account extends BaseEntity {
     @Column(updatable = false)
     private Long userId;
 
-    public static Account of(String accountNo, String accountName, String password, BigDecimal balance, AccountType accountType, AccountState accountState, Long userId) {
+    public static Account of(String accountNo, String password, String accountName, BigDecimal balance, AccountType accountType, AccountState accountState, Long userId) {
         return Account.builder()
                 .accountNo(accountNo)
                 .password(password)
