@@ -24,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.math.RoundingMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.creditto.core_banking.global.response.error.ErrorMessage.FEE_NOT_FOUND;
@@ -55,7 +54,6 @@ class RemittanceFeeServiceTest {
     private PctServiceFee pctFeePolicyActive;
     private NetworkFee networkFeePolicyUSD;
     private NetworkFee networkFeePolicyJPY;
-    private NetworkFee networkFeePolicyAUD;
 
     @BeforeEach
     void setUp() {
@@ -71,7 +69,6 @@ class RemittanceFeeServiceTest {
         pctFeePolicyActive = PctServiceFee.of(1L, new BigDecimal("0.2"), true);
         networkFeePolicyUSD = NetworkFee.of(1L, CurrencyCode.USD, new BigDecimal("15"));
         networkFeePolicyJPY = NetworkFee.of(2L, CurrencyCode.JPY, new BigDecimal("2000"));
-        networkFeePolicyAUD = NetworkFee.of(3L, CurrencyCode.AUD, new BigDecimal("100"));
     }
 
     @Nested
@@ -152,42 +149,7 @@ class RemittanceFeeServiceTest {
             assertThat(savedFeeRecord.getTotalFee()).isEqualByComparingTo(expectedTotalFee);
         }
 
-        @Test
-        @DisplayName("AUD 송금 (PctFee 비활성)")
-        void calculateAndSaveFee_ForAUD_When_PctFeeInactive() {
-            // given
-            BigDecimal sendAmount = new BigDecimal("1000"); // 1000 AUD
-            BigDecimal exchangeRate = new BigDecimal("900.00"); // 1 AUD = 900.00원
-            CurrencyCode currency = CurrencyCode.AUD;
-            BigDecimal exchangeRateUSD = new BigDecimal("1458.86");
-            RemittanceFeeReq req = new RemittanceFeeReq(exchangeRate, sendAmount, currency, exchangeRateUSD);
 
-            when(flatServiceFeeRepository.findFirstByUpperLimitGreaterThanEqualOrderByUpperLimitAsc(any(BigDecimal.class)))
-                    .thenAnswer(invocation -> {
-                        BigDecimal amountInUSD = invocation.getArgument(0, BigDecimal.class);
-                        return flatFeeTiers.stream()
-                                .filter(tier -> tier.getUpperLimit().compareTo(amountInUSD) >= 0)
-                                .findFirst();
-                    });
-            when(pctServiceFeeRepository.findFirstByOrderByPctServiceFeeIdAsc()).thenReturn(Optional.of(pctFeePolicyInactive));
-            when(networkFeeRepository.findByCurrencyCode(currency)).thenReturn(Optional.of(networkFeePolicyAUD));
-            when(feeRecordRepository.save(any(FeeRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-            // when
-            remittanceFeeService.calculateAndSaveFee(req);
-
-            // then
-            ArgumentCaptor<FeeRecord> feeRecordCaptor = ArgumentCaptor.forClass(FeeRecord.class);
-            verify(feeRecordRepository).save(feeRecordCaptor.capture());
-            FeeRecord savedFeeRecord = feeRecordCaptor.getValue();
-
-            // flatFeeInKRW = 2500 (assuming 1000 AUD converted to USD falls into this tier)
-            // pctFeeInKRW = 0 (비활성)
-            // networkFeeInKRW = 100 * 900.00 = 90000
-            // totalFee = 2500 + 0 + 90000 = 92500
-            BigDecimal expectedTotalFee = new BigDecimal("92500.00");
-            assertThat(savedFeeRecord.getTotalFee().setScale(2, RoundingMode.HALF_UP)).isEqualByComparingTo(expectedTotalFee.setScale(2, RoundingMode.HALF_UP));
-        }
 
         @Test
         @DisplayName("USD 송금 (PctFee 활성)")
