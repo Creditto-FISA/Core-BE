@@ -60,6 +60,10 @@ public abstract class RegularRemittance {
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
     private LocalDateTime updatedAt;
 
+    public void setStartedAt(LocalDate startedAt) {
+        this.startedAt = startedAt;
+    }
+
     public void updateRegRemStatus(RegRemStatus regRemStatus) {
         this.regRemStatus = regRemStatus;
     }

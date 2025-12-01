@@ -41,7 +41,7 @@ public class WeeklyRegularRemittance extends RegularRemittance{
             DayOfWeek scheduledDay,
             LocalDate startedAt
     ) {
-        return WeeklyRegularRemittance.builder()
+        WeeklyRegularRemittance remittance = WeeklyRegularRemittance.builder()
                 .account(account)
                 .recipient(recipient)
                 .sendCurrency(sendCurrency)
@@ -49,8 +49,9 @@ public class WeeklyRegularRemittance extends RegularRemittance{
                 .sendAmount(sendAmount)
                 .regRemStatus(RegRemStatus.ACTIVE)
                 .scheduledDay(scheduledDay)
-                .startedAt(startedAt)
                 .build();
+        remittance.setStartedAt(startedAt);
+        return remittance;
     }
 
 }

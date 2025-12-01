@@ -18,10 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +34,45 @@ class TransactionServiceTest {
 
     @InjectMocks
     private TransactionService transactionService;
+
+    @Test
+    @DisplayName("계좌 ID로 거래 내역 조회 성공")
+    void findByAccountId_Success() {
+        // given
+        Long accountId = 1L;
+        Account mockAccount = mock(Account.class);
+        given(mockAccount.getId()).willReturn(accountId);
+
+        Transaction mockTransaction = Transaction.of(
+            mockAccount,
+            new BigDecimal("1000"),
+            TxnType.DEPOSIT,
+            1L,
+            TxnResult.SUCCESS
+        );
+        // Using reflection to set the ID for the mock object
+        try {
+            java.lang.reflect.Field idField = Transaction.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(mockTransaction, 99L);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        given(transactionRepository.findByAccountIdWithAccount(accountId)).willReturn(List.of(mockTransaction));
+
+        // when
+        List<TransactionRes> result = transactionService.findByAccountId(accountId);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(1);
+        TransactionRes res = result.get(0);
+        assertThat(res.txnId()).isEqualTo(99L);
+        assertThat(res.accountId()).isEqualTo(accountId);
+        assertThat(res.txnAmount()).isEqualByComparingTo("1000");
+        assertThat(res.txnType()).isEqualTo(TxnType.DEPOSIT);
+    }
 
     @Test
     @DisplayName("새로운 거래 기록 저장 성공")

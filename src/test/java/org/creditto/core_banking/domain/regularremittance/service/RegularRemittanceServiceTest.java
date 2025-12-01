@@ -215,6 +215,7 @@ class RegularRemittanceServiceTest {
         assertThat(result.getRegRemType()).isEqualTo("MONTHLY");
         assertThat(result.getSendAmount()).isEqualByComparingTo("2000");
         assertThat(result.getScheduledDate()).isEqualTo(20);
+        assertThat(result.getStartedAt()).isEqualTo(newStartedAt);
     }
 
     @Test
@@ -232,6 +233,7 @@ class RegularRemittanceServiceTest {
         assertThat(result.getRegRemType()).isEqualTo("WEEKLY");
         assertThat(result.getSendAmount()).isEqualByComparingTo("5000");
         assertThat(result.getScheduledDay()).isEqualTo(DayOfWeek.FRIDAY);
+        assertThat(result.getStartedAt()).isEqualTo(newStartedAt);
     }
 
     @Test

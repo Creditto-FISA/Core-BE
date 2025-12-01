@@ -36,7 +36,7 @@ public class MonthlyRegularRemittance extends RegularRemittance{
             Integer scheduledDate,
             LocalDate startedAt
     ) {
-        return MonthlyRegularRemittance.builder()
+        MonthlyRegularRemittance remittance = MonthlyRegularRemittance.builder()
                 .account(account)
                 .recipient(recipient)
                 .sendCurrency(sendCurrency)
@@ -44,7 +44,8 @@ public class MonthlyRegularRemittance extends RegularRemittance{
                 .sendAmount(sendAmount)
                 .regRemStatus(RegRemStatus.ACTIVE)
                 .scheduledDate(scheduledDate)
-                .startedAt(startedAt)
                 .build();
+        remittance.setStartedAt(startedAt);
+        return remittance;
     }
 }
