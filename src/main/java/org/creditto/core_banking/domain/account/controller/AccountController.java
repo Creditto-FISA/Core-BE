@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
 import org.creditto.core_banking.domain.account.dto.AccountSummaryRes;
-import org.creditto.core_banking.domain.account.dto.AccountVerifyPasswordReq;
+import org.creditto.core_banking.domain.account.dto.AccountPasswordConfirmReq;
 import org.creditto.core_banking.domain.account.service.AccountService;
 import org.creditto.core_banking.global.response.ApiResponseUtil;
 import org.creditto.core_banking.global.response.BaseResponse;
@@ -35,7 +35,7 @@ public class AccountController {
 
     @PostMapping("/{accountId}/verify-password")
     public ResponseEntity<BaseResponse<Void>> verifyPassword(@PathVariable Long accountId,
-                                                             @RequestBody AccountVerifyPasswordReq request) {
+                                                             @RequestBody AccountPasswordConfirmReq request) {
         accountService.verifyPassword(accountId, request.password());
         return ApiResponseUtil.success(SuccessCode.OK);
     }

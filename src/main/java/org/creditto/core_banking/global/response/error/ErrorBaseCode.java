@@ -20,7 +20,7 @@ public enum ErrorBaseCode implements ErrorCode {
     INVALID_REQUEST_BODY(HttpStatus.BAD_REQUEST, 400, "BODY 유효성 검사 실패 오류입니다."),
     INSUFFICIENT_FUNDS(HttpStatus.BAD_REQUEST, 40001, "계좌 잔액이 부족합니다."),
     INVALID_ACCOUNT_TYPE(HttpStatus.BAD_REQUEST, 40002, "해당 거래에 유효하지 않은 계좌 종류입니다."),
-    PASSWORD_REPEATING_DIGITS(HttpStatus.BAD_REQUEST, 40003, "반복되는 숫자는 비밀번호로 사용할 수 없습니다"),
+    PASSWORD_REPEATING_DIGITS(HttpStatus.BAD_REQUEST, 40003, "반복되는 숫자는 비밀번호로 사용할 수 없습니다."),
     PASSWORD_SEQUENTIAL_DIGITS(HttpStatus.BAD_REQUEST, 40004, "연속되는 숫자는 비밀번호로 사용할 수 없습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, 40005, "비밀번호가 일치하지 않습니다."),
     MISMATCH_PASSWORD(HttpStatus.BAD_REQUEST, 40006, "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
