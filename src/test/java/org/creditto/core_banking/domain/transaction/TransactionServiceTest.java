@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -43,21 +44,13 @@ class TransactionServiceTest {
         Account mockAccount = mock(Account.class);
         given(mockAccount.getId()).willReturn(accountId);
 
-        Transaction mockTransaction = Transaction.of(
-            mockAccount,
-            new BigDecimal("1000"),
-            TxnType.DEPOSIT,
-            1L,
-            TxnResult.SUCCESS
-        );
-        // Using reflection to set the ID for the mock object
-        try {
-            java.lang.reflect.Field idField = Transaction.class.getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(mockTransaction, 99L);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        Transaction mockTransaction = mock(Transaction.class);
+        given(mockTransaction.getId()).willReturn(99L);
+        given(mockTransaction.getAccount()).willReturn(mockAccount);
+        given(mockTransaction.getTxnAmount()).willReturn(new BigDecimal("1000"));
+        given(mockTransaction.getTxnType()).willReturn(TxnType.DEPOSIT);
+        given(mockTransaction.getTypeId()).willReturn(1L);
+        given(mockTransaction.getCreatedAt()).willReturn(java.time.LocalDateTime.now());
 
         given(transactionRepository.findByAccountIdWithAccount(accountId)).willReturn(List.of(mockTransaction));
 
