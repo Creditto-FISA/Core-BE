@@ -1,9 +1,6 @@
 package org.creditto.core_banking.domain.exchange;
 
-import org.creditto.core_banking.domain.exchange.dto.ExchangeRateRes;
-import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
-import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
-import org.creditto.core_banking.domain.exchange.dto.SingleExchangeRateRes;
+import org.creditto.core_banking.domain.exchange.dto.*;
 import org.creditto.core_banking.domain.exchange.entity.Exchange;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
 import org.creditto.core_banking.domain.exchange.service.ExchangeService;
@@ -208,4 +205,32 @@ class  ExchangeServiceTest {
             .extracting("errorCode")
             .isEqualTo(ErrorBaseCode.CURRENCY_NOT_SUPPORTED);
     }
+
+    @Test
+    @DisplayName("우대 환율 정보 및 적용 환율 조회 성공")
+    void getPreferentialRateInfo_Success() {
+        // Given
+        Long userId = 1L;
+        CurrencyCode currencyCode = CurrencyCode.USD;
+        double preferentialRate = MOCK_PREFERENTIAL_RATE.doubleValue(); // 0.5
+
+        given(creditScoreService.getPreferentialRate(userId)).willReturn(preferentialRate);
+        given(exchangeRateProvider.getExchangeRates()).willReturn(rateMap);
+
+        // Expected applied rate calculation
+        BigDecimal baseRate = new BigDecimal(usdRate.getBaseRate()); // 1300.00
+        BigDecimal adjustedBaseRate = baseRate.divide(new BigDecimal(currencyCode.getUnit()), 4, RoundingMode.HALF_UP); // 1300.00 / 1 = 1300.00
+        BigDecimal effectiveSpread = SPREAD_RATE.multiply(BigDecimal.ONE.subtract(MOCK_PREFERENTIAL_RATE)); // 0.01 * (1 - 0.5) = 0.005
+        BigDecimal expectedAppliedRate = adjustedBaseRate.multiply(BigDecimal.ONE.add(effectiveSpread)).setScale(2, RoundingMode.HALF_UP); // 1300.00 * (1 + 0.005) = 1306.50
+
+        // When
+        PreferentialRateRes result = exchangeService.getPreferentialRateInfo(userId, currencyCode);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.preferentialRate()).isEqualTo(preferentialRate);
+        assertThat(result.appliedRate()).isEqualByComparingTo(expectedAppliedRate);
+    }
 }
+
+    
