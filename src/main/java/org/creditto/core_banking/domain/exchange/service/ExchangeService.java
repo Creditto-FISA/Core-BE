@@ -7,6 +7,7 @@ import org.creditto.core_banking.domain.exchange.dto.ExchangeReq;
 import org.creditto.core_banking.domain.exchange.dto.ExchangeRes;
 import org.creditto.core_banking.domain.exchange.entity.Exchange;
 import org.creditto.core_banking.domain.exchange.repository.ExchangeRepository;
+import org.creditto.core_banking.domain.exchange.dto.PreferentialRateRes;
 import org.creditto.core_banking.domain.exchange.dto.SingleExchangeRateRes;
 import org.creditto.core_banking.global.common.CurrencyCode;
 import org.creditto.core_banking.global.feign.ExchangeRateProvider;
@@ -188,6 +189,23 @@ public class ExchangeService {
                 rate
         );
         return exchangeRepository.save(exchange);
+    }
+
+    /**
+     * 우대 환율 및 적용 환율 정보를 조회하여 반환
+     * @param userId 사용자 ID
+     * @param currencyCode 조회할 통화 코드
+     * @return 우대 환율 및 적용 환율 정보
+     */
+    public PreferentialRateRes getPreferentialRateInfo(Long userId, CurrencyCode currencyCode) {
+        double preferentialRate = creditScoreService.getPreferentialRate(userId);
+        Map<String, ExchangeRateRes> rateMap = getLatestRates();
+        BigDecimal baseRateFromApi = getBaseRateForCurrency(rateMap, currencyCode);
+        BigDecimal adjustedBaseRate = baseRateFromApi.divide(new BigDecimal(currencyCode.getUnit()), ADJUSTED_RATE_SCALE, RoundingMode.HALF_UP);
+
+        BigDecimal appliedRate = calculateAppliedRate(adjustedBaseRate, true, preferentialRate).setScale(2, RoundingMode.HALF_UP);
+
+        return new PreferentialRateRes(preferentialRate, appliedRate);
     }
 
     /**
