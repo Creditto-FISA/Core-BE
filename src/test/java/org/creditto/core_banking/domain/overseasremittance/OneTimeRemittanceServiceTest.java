@@ -65,6 +65,13 @@ class OneTimeRemittanceServiceTest {
     void setUp() {
         userId = 1L;
         mockAccount = Account.of("1002-123-456789", "예금계좌", "password", BigDecimal.valueOf(600_000), DEPOSIT , ACTIVE, userId);
+        try {
+            java.lang.reflect.Field accountIdField = Account.class.getDeclaredField("id");
+            accountIdField.setAccessible(true);
+            accountIdField.set(mockAccount, 1L);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
 
         mockRecipientInfo = OverseasRemittanceRequestDto.RecipientInfo.builder()
                 .name("John Doe")
@@ -89,6 +96,13 @@ class OneTimeRemittanceServiceTest {
         );
 
         mockRecipient = Recipient.of(mockRecipientCreateDto);
+        try {
+            java.lang.reflect.Field recipientIdField = Recipient.class.getDeclaredField("recipientId");
+            recipientIdField.setAccessible(true);
+            recipientIdField.set(mockRecipient, 1L);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
 
         baseRequest = OverseasRemittanceRequestDto.builder()
             .accountNo(mockAccount.getAccountNo())
