@@ -53,15 +53,4 @@ public class ExchangeController {
         double rate = creditScoreService.getPreferentialRate(userId);
         return ApiResponseUtil.success(SuccessCode.OK, new  PreferentialRateRes(rate));
     }
-
-    /**
-     * 환전 요청 처리
-     *
-     * @param request 환전 요청 정보 (계좌 ID, 통화, 금액 등)
-     * @return 성공 응답 및 환전 결과 정보
-     */
-    @PostMapping
-    public ResponseEntity<BaseResponse<ExchangeRes>> exchange(Long userId, @RequestBody ExchangeReq request) {
-        return ApiResponseUtil.success(SuccessCode.OK, exchangeService.exchange(userId, request));
-    }
 }

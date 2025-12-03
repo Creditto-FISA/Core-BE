@@ -13,7 +13,7 @@ public class CreditScore extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     @Column(name = "score", nullable = false)
     private Integer score;
