@@ -40,11 +40,6 @@ public class AccountService {
      */
     @Transactional
     public AccountRes createAccount(AccountCreateReq request, Long userId) {
-        // 비밀번호 일치 확인
-        if (!request.password().equals(request.passwordConfirmation())) {
-            throw new CustomBaseException(ErrorBaseCode.MISMATCH_PASSWORD);
-        }
-
         // 비밀번호 유효성 검사
         passwordValidator.validatePassword(request.password());
 

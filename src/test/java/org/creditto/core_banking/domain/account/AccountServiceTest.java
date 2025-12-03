@@ -63,7 +63,6 @@ class AccountServiceTest {
         AccountCreateReq request = new AccountCreateReq(
                 "새로운 계좌",
                 AccountType.DEPOSIT,
-                "1234",
                 "1234"
                 );
         Long userId = 1L;
@@ -97,36 +96,12 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("계좌 생성 실패 - 비밀번호와 비밀번호 확인 불일치")
-    void createAccount_Failure_PasswordMismatch() {
-        // Given
-        AccountCreateReq request = new AccountCreateReq(
-                "새로운 계좌",
-                AccountType.DEPOSIT,
-                "1234",
-                "5678"
-                );
-        Long userId = 1L;
-
-        // When & Then
-        assertThatThrownBy(() -> accountService.createAccount(request, userId))
-                .isInstanceOf(CustomBaseException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorBaseCode.MISMATCH_PASSWORD);
-
-        verify(passwordValidator, never()).validatePassword(anyString());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(accountRepository, never()).save(any(Account.class));
-    }
-
-    @Test
     @DisplayName("계좌 생성 실패 - 비밀번호 정책 위반")
     void createAccount_Failure_InvalidPasswordPolicy() {
         // Given
         AccountCreateReq request = new AccountCreateReq(
                 "새로운 계좌",
                 AccountType.DEPOSIT,
-                "1111",
                 "1111"
                 );
         Long userId = 1L;
