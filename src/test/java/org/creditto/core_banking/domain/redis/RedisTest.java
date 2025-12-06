@@ -1,5 +1,6 @@
 package org.creditto.core_banking.domain.redis;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ public class RedisTest {
         String expectedValue = "redis";
         redisTemplate.opsForValue().set(key, expectedValue);
         Object value = redisTemplate.opsForValue().get(key);
+        Assertions.assertThat(value).isEqualTo(expectedValue);
         System.out.println("Redis Value: " + value);
     }
 }
