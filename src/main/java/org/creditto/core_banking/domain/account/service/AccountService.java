@@ -1,5 +1,7 @@
 package org.creditto.core_banking.domain.account.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.creditto.core_banking.domain.account.dto.AccountCreateReq;
 import org.creditto.core_banking.domain.account.dto.AccountRes;
@@ -12,12 +14,14 @@ import org.creditto.core_banking.domain.account.service.strategy.TransactionStra
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.creditto.core_banking.global.response.exception.CustomBaseException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,8 @@ public class AccountService {
     private final TransactionStrategyFactory strategyFactory;
     private final PasswordValidator passwordValidator;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
 
     /**
@@ -58,6 +64,11 @@ public class AccountService {
         );
 
         Account savedAccount = accountRepository.save(account);
+
+        // 새 계좌 생성 시, 총 잔액 캐시 무효화
+        String key = "totalBalance::" + userId;
+        redisTemplate.delete(key);
+
         return AccountRes.from(savedAccount);
     }
 
@@ -120,7 +131,38 @@ public class AccountService {
                 .toList();
     }
 
+//    public AccountSummaryRes getTotalBalanceByUserId(Long userId) {
+//        return accountRepository.findAccountSummaryByUserId(userId);
+//    }
+
     public AccountSummaryRes getTotalBalanceByUserId(Long userId) {
-        return accountRepository.findAccountSummaryByUserId(userId);
+        String key = "totalBalance::" + userId;
+        String cachedValue = (String) redisTemplate.opsForValue().get(key);
+
+        if (cachedValue != null) {
+            try {
+                return objectMapper.readValue(cachedValue, AccountSummaryRes.class);
+            } catch (JsonProcessingException e) {
+                // 캐시된 값이 잘못된 형식일 경우, 로깅 후 DB에서 다시 조회
+            }
+        }
+
+        // DB에서 계좌 목록 조회
+        List<Account> accounts = accountRepository.findAccountByUserId(userId);
+        BigDecimal totalBalance = accounts.stream()
+            .map(Account::getBalance)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        AccountSummaryRes summary = new AccountSummaryRes(accounts.size(), totalBalance);
+
+        // Redis에 결과 캐싱 (우선,,, 10분 만료)
+        try {
+            String jsonValue = objectMapper.writeValueAsString(summary);
+            redisTemplate.opsForValue().set(key, jsonValue, 10, TimeUnit.MINUTES);
+        } catch (JsonProcessingException e) {
+            // 직렬화 실패 시 로깅
+        }
+
+        return summary;
     }
 }
