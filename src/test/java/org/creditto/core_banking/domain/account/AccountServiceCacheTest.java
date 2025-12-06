@@ -12,6 +12,7 @@ import org.creditto.core_banking.domain.recipient.dto.RecipientCreateDto;
 import org.creditto.core_banking.domain.recipient.entity.Recipient;
 import org.creditto.core_banking.domain.recipient.repository.RecipientRepository;
 import org.creditto.core_banking.global.common.CurrencyCode;
+import org.creditto.core_banking.global.util.CacheKeyUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public class AccountServiceCacheTest {
 
         );
         testRecipient = recipientRepository.save(Recipient.of(recipientDto));
-        cacheKey = "totalBalance::" + testUserId;
+        cacheKey = CacheKeyUtil.getTotalBalanceKey(testUserId);
         redisTemplate.delete(cacheKey); // 테스트 시작 전 캐시 비우기
 
         System.out.println("===== 테스트 준비 완료: 계좌 3개(총 60000원) 생성, 캐시 비움 =====");
@@ -70,54 +71,34 @@ public class AccountServiceCacheTest {
 
         @Test
         @DisplayName("총 잔액 조회 캐싱 및 무효화 전체 시나리오 테스트")
-        void testTotalBalanceCachingScenario() throws InterruptedException {
+        void testTotalBalanceCachingScenario() {
             // 시나리오 1: 첫 번째 조회 (Cache Miss)
-            Object CachedValue = redisTemplate.opsForValue().get(cacheKey);
-            assertThat(CachedValue).isNull();
-            System.out.println("[상태 0] 첫 조회 (캐시 없음). 10초 동안 Redis를 확인하세요. ('GET totalBalance::1')");
-            Thread.sleep(10000);
+            Object cachedValueBefore = redisTemplate.opsForValue().get(cacheKey);
+            assertThat(cachedValueBefore).isNull();
 
-            System.out.println("\n>>>>> [1] 첫 조회 (캐시 없음)");
             AccountSummaryRes summary1 = accountService.getTotalBalanceByUserId(testUserId);
             assertThat(summary1.totalBalance()).isEqualByComparingTo(BigDecimal.valueOf(60000));
-            System.out.println("<<<<< 첫 조회 결과: " + summary1.totalBalance());
 
-            Object cachedValue1 = redisTemplate.opsForValue().get(cacheKey);
-            assertThat(cachedValue1).isNotNull();
-            System.out.println(">>>>> 검증: 캐시 생성됨.");
-            System.out.println("[상태 1] 캐시 생성됨. 10초 동안 Redis를 확인하세요. ('GET totalBalance::1')");
-            Thread.sleep(10000);
+            Object cachedValueAfterFirstCall = redisTemplate.opsForValue().get(cacheKey);
+            assertThat(cachedValueAfterFirstCall).isNotNull();
 
 
             // 시나리오 2: 두 번째 조회 (Cache Hit)
-            System.out.println("\n>>>>> [2] 두 번째 조회 (캐시 있음)");
             AccountSummaryRes summary2 = accountService.getTotalBalanceByUserId(testUserId);
             assertThat(summary2.totalBalance()).isEqualByComparingTo(BigDecimal.valueOf(60000));
-            System.out.println("<<<<< 두 번째 조회 결과: " + summary2.totalBalance());
-            System.out.println(">>>>> 검증: 캐시에서 조회됨.\n");
 
 
             // 시나리오 3: 신규 계좌 생성으로 인한 캐시 무효화
-            System.out.println("\n>>>>> [3] 신규 계좌 생성");
             accountService.createAccount(new AccountCreateReq("Test Account 4", AccountType.SAVINGS, "1334"), testUserId);
-            System.out.println("<<<<< 신규 계좌 생성 완료.");
 
-            Object invalidatedCache2 = redisTemplate.opsForValue().get(cacheKey);
-            assertThat(invalidatedCache2).isNull();
-            System.out.println(">>>>> 검증: 계좌 생성 후 캐시 삭제됨.");
-            System.out.println("########## [상태 3] 신규 계좌 생성 후 캐시 삭제됨. 10초 동안 Redis를 확인하세요. ('GET totalBalance::1' -> nil) ##########");
-            Thread.sleep(10000);
+            Object invalidatedCache = redisTemplate.opsForValue().get(cacheKey);
+            assertThat(invalidatedCache).isNull();
 
             // 시나리오 4: 최종 조회
-            System.out.println("\n>>>>> [4] 최종 총 잔액 조회");
             AccountSummaryRes summary4 = accountService.getTotalBalanceByUserId(testUserId);
             assertThat(summary4.totalBalance()).isEqualByComparingTo(BigDecimal.valueOf(60000));
             assertThat(summary4.accountCount()).isEqualTo(4);
-            System.out.println("<<<<< 최종 조회 결과: " + summary4.totalBalance() + ", 계좌 수: " + summary4.accountCount());
 
             Object finalCachedValue = redisTemplate.opsForValue().get(cacheKey);
             assertThat(finalCachedValue).isNotNull();
-            System.out.println(">>>>> 검증: 최종 조회 후 캐시 재생성됨.");
-            System.out.println("########## [상태 5] 최종 조회 후 캐시 재생성됨. 10초 동안 Redis를 확인하세요. ('GET totalBalance::1') ##########");
-            Thread.sleep(10000);
         }}

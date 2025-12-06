@@ -25,6 +25,7 @@ import org.creditto.core_banking.domain.transaction.service.TransactionService;
 import org.creditto.core_banking.global.common.CurrencyCode;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.creditto.core_banking.global.response.exception.CustomBaseException;
+import org.creditto.core_banking.global.util.CacheKeyUtil;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -138,7 +139,7 @@ public class RemittanceProcessorService {
         accountRepository.save(account);
 
         // 총 잔액 캐시 무효화
-        String key = "totalBalance::" + userId;
+        String key = CacheKeyUtil.getTotalBalanceKey(userId);
         redisTemplate.delete(key);
 
         return OverseasRemittanceResponseDto.from(overseasRemittance);
