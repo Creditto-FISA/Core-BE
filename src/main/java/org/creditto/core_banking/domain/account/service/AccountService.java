@@ -83,8 +83,12 @@ public class AccountService {
      */
     @Transactional
     public void processTransaction(Long accountId, BigDecimal amount, TxnType txnType, Long typeId) {
+        // 전략 조회
         TransactionStrategy strategy = strategyFactory.getStrategy(txnType);
+
+        // 분산 락 적용
         accountLockService.executeWithLock(accountId, () -> {
+            // 비관적 락 적용
             Account account = accountRepository.findByIdForUpdate(accountId)
                     .orElseThrow(() -> new CustomBaseException(ErrorBaseCode.NOT_FOUND_ACCOUNT));
             strategy.execute(account, amount, typeId);
