@@ -1,6 +1,7 @@
 package org.creditto.core_banking.domain.overseasremittance.service;
 
 import lombok.RequiredArgsConstructor;
+import org.creditto.core_banking.common.vo.Money;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.account.repository.AccountRepository;
 import org.creditto.core_banking.domain.account.service.AccountLockService;
@@ -89,15 +90,17 @@ public class RemittanceProcessorService {
 
         // 실제 송금해야 할 금액
         BigDecimal actualSendAmount = exchangeRes.exchangeAmount();
+        Money sendAmountMoney = Money.of(actualSendAmount, CurrencyCode.KRW);
 
         // 수수료 계산
         FeeRecord feeRecord = calculateFee(exchangeRes, command.receiveCurrency());
 
         // 총 수수료
         BigDecimal totalFee = feeRecord.getTotalFee();
+        Money totalFeeMoney = Money.of(totalFee, CurrencyCode.KRW);
 
         // 총 차감될 금액 계산 (실제 보낼 금액 + 총 수수료)
-        BigDecimal totalDeduction = actualSendAmount.add(totalFee);
+        Money totalDeductionMoney = sendAmountMoney.plus(totalFeeMoney);
 
         // 3. DTO에 담겨올 ID로 Exchange 엔티티 다시 조회
         Long exchangeId = exchangeRes.exchangeId();
@@ -109,7 +112,7 @@ public class RemittanceProcessorService {
             Account lockedAccount = accountRepository.findByIdForUpdate(command.accountId())
                     .orElseThrow(() -> new CustomBaseException(NOT_FOUND_ACCOUNT));
 
-            if (!lockedAccount.checkSufficientBalance(totalDeduction)) {
+            if (!lockedAccount.checkSufficientBalance(totalDeductionMoney)) {
                 transactionService.saveTransaction(lockedAccount, actualSendAmount, TxnType.WITHDRAWAL, null, TxnResult.FAILURE);
                 throw new CustomBaseException(ErrorBaseCode.INSUFFICIENT_FUNDS);
             }
@@ -126,11 +129,11 @@ public class RemittanceProcessorService {
             remittanceRepository.save(overseasRemittance);
 
             if (totalFee.compareTo(BigDecimal.ZERO) > 0) {
-                lockedAccount.withdraw(totalFee);
+                lockedAccount.withdraw(totalFeeMoney);
                 transactionService.saveTransaction(lockedAccount, totalFee, TxnType.FEE, overseasRemittance.getRemittanceId(), TxnResult.SUCCESS);
             }
 
-            lockedAccount.withdraw(actualSendAmount);
+            lockedAccount.withdraw(sendAmountMoney);
             transactionService.saveTransaction(lockedAccount, actualSendAmount, TxnType.WITHDRAWAL, overseasRemittance.getRemittanceId(), TxnResult.SUCCESS);
 
             accountRepository.save(lockedAccount);

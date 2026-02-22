@@ -2,7 +2,9 @@ package org.creditto.core_banking.domain.account.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.creditto.core_banking.common.vo.Money;
 import org.creditto.core_banking.global.common.BaseEntity;
+import org.creditto.core_banking.global.common.CurrencyCode;
 import org.creditto.core_banking.global.response.error.ErrorBaseCode;
 import org.creditto.core_banking.global.response.exception.CustomBaseException;
 
@@ -63,6 +65,7 @@ public class Account extends BaseEntity {
 
     private static final int ACCOUNT_NO_LENGTH = 13;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final CurrencyCode ACCOUNT_CURRENCY = CurrencyCode.KRW;
 
     @PrePersist
     protected void prePersist() {
@@ -89,22 +92,21 @@ public class Account extends BaseEntity {
 
 
     // 입금
-    public void deposit(BigDecimal amount) {
-        this.balance = this.balance.add(amount);
+    public void deposit(Money amount) {
+        this.balance = currentBalance().plus(amount).getAmount();
     }
 
     // 출금
-    public void withdraw(BigDecimal amount) {
-        if (!this.checkSufficientBalance(amount)) {
-            throw new CustomBaseException(ErrorBaseCode.INSUFFICIENT_FUNDS);
-        }
-
-        this.balance = balance.subtract(amount);
+    public void withdraw(Money amount) {
+        this.balance = currentBalance().minus(amount).getAmount();
     }
 
     // 출금 가능한지 확인
-    public boolean checkSufficientBalance(BigDecimal amount) {
-        return this.balance.compareTo(amount) >= 0;
+    public boolean checkSufficientBalance(Money amount) {
+        return currentBalance().gte(amount);
     }
 
+    private Money currentBalance() {
+        return Money.of(this.balance, ACCOUNT_CURRENCY);
+    }
 }
