@@ -50,14 +50,6 @@ public final class Money {
         return this.amount.compareTo(other.amount) >= 0;
     }
 
-    public BigDecimal amount() {
-        return amount;
-    }
-
-    public CurrencyCode currency() {
-        return currency;
-    }
-
     private void assertSameCurrency(Money other) {
         if (other == null) {
             throw new CustomBaseException(ErrorBaseCode.BAD_REQUEST);
