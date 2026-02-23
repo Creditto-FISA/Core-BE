@@ -1,8 +1,10 @@
 package org.creditto.core_banking.domain.account.service.strategy;
 
+import org.creditto.core_banking.common.vo.Money;
 import org.creditto.core_banking.domain.account.entity.Account;
 import org.creditto.core_banking.domain.transaction.entity.TxnType;
 import org.creditto.core_banking.domain.transaction.service.TransactionService;
+import org.creditto.core_banking.global.common.CurrencyCode;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,7 +18,7 @@ public class WithdrawalStrategy extends AbstractTransactionStrategy {
 
     @Override
     protected void process(Account account, BigDecimal amount, Long typeId) {
-        account.withdraw(amount);
+        account.withdraw(Money.of(amount, CurrencyCode.KRW));
     }
 
     @Override
