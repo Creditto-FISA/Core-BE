@@ -43,6 +43,14 @@ management:
 server:
   port: ${SERVER_PORT:8090}
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
 logging:
   level:
     org.hibernate.sql: DEBUG
