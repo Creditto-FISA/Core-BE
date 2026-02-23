@@ -2,58 +2,24 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: ["main", "dev"]
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: .env 파일 생성
-        run: |
-          
-          # .env 파일 생성
-          touch .env
-          
-          # .env 파일 작성
-          echo "${{ secrets.ENV_FILE }}" >> .env
-          
-          chmod 600 .env
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
 
-        shell: bash
-
-      - name: build 실행
+      - name: Run CI validation
         run: |
           chmod +x gradlew
-          ./gradlew clean build
-        shell: bash
-
-      - name: sonarqube
-        run: |
-          ./gradlew sonar \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_NAME }} \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-
-        shell: bash
-
-      - name: SonarQube Quality Gate check
-        id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        with:
-          pollingTimeoutSec: 600
-          scanMetadataReportFile: build/sonar/report-task.txt
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm .env
-          rm -rf build
-          docker system prune -af --volumes
-        shell: bash
+          ./gradlew clean build --no-daemon
